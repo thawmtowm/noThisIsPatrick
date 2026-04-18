@@ -593,7 +593,7 @@
 
         @media (orientation: portrait) and (max-width: 720px) {
             .iframe-editor {
-                height: 75vh;
+                height: 85vh;
             }
         }
         .iframe-blog-cmt {
