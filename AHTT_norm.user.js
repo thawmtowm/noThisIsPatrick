@@ -28,7 +28,6 @@
             observerCommentBlock.observe(commentBlock);
             /**
              * Change color of ZZ DARKMODE/LIGHTMODE
-             * Remove if don't use DARKMODE
              */
             if (prefersDarkScheme.matches) {
                 const authorLink = commentBlock.querySelector('.comment-author a');
@@ -52,21 +51,23 @@
      * 'mobile-web-app-capable', 'apple-mobile-web-app-capable' Để cài áp standalone trên điện thoại kèm nhận thông báo
      */
     function applyNewMetaTags() {
-        var viewportMetaTag = document.querySelector('meta[name="viewport"]');
-        if (viewportMetaTag) {
-            viewportMetaTag.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover');
-        } else {
-            var newMetaTag = document.createElement('meta');
-            newMetaTag.setAttribute('name', 'viewport');
-            newMetaTag.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover');
-            document.head.appendChild(newMetaTag);
-        }
-        ['mobile-web-app-capable', 'apple-mobile-web-app-capable'].forEach(name => {
-            var metaTag = document.createElement('meta');
-            metaTag.setAttribute('name', name);
-            metaTag.setAttribute('content', 'yes');
-            document.head.appendChild(metaTag);
-        });
+        const head = document.head;
+
+        const setMeta = (name, content) => {
+            let meta = document.querySelector(`meta[name="${name}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = name;
+                head.appendChild(meta);
+            }
+            meta.content = content;
+        };
+
+        // Set Viewport
+        setMeta('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+
+        // Set Web App Capabilities
+        ['mobile-web-app-capable', 'apple-mobile-web-app-capable'].forEach(name => setMeta(name, 'yes'));
     }
     /**
      * Zanh sách CSS mới
@@ -406,6 +407,8 @@
             }
         }
 
+
+        /* Widget */
         .sidebar-container .widget + .widget {
             border-top: 0;
         }
@@ -413,33 +416,35 @@
             padding: 0;
             border-top: 0;
         }
+        summary {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 5px;
+        }
 
-        /* Widget Title */
+        summary::-webkit-details-marker {
+            display: none;
+        }
+                summary::before {
+            content: '›';
+            display: inline-block;
+            margin-right: 10px;
+            font-weight: 100;
+            transition: transform 0.2s ease;
+        }
+
+        details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
         .widget .title {
-            font-size: 16px;
+            font-size: 1.2em;
             font-weight: bold;
             color: var(--text-primary);
+            line-height: normal;
         }
-
-        .widget .HTML .title  {
-            padding-top: 5px;
-        }
-
-        #HTML5 .title,
-        #HTML8 .title,
-        #HTML10 .title {
-            font-size: 18px;
-        }
-        /* Collapsible Details */
-        .collapsible {
-            margin-top: 10px;
-        }
-
-        .collapsible-title {
-            cursor: pointer;
-            padding: 5px 10px 5px 0;
-        }
-
 
         /* Links in the Widget */
         .sidebar_bottom .widget-content {
@@ -455,26 +460,17 @@
         #HTML1 a:nth-child(5) {
             margin-bottom: 10px;
         }
-        .bua-links {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 1000ms ease-in-out;
-        }
-        .bua-links.open {
-            width: auto;
-            height: auto;
-            transition: max-height 1000ms ease-in-out;
-            max-height: 3000px;
-        }
         .sidebar_bottom .widget-content>a {
             color: var(--text-link);
             font-size: 16px;
             text-decoration: none;
             display: block;
             padding: 5px 0 5px 10px;
+            transition: margin 0.2s ease;
         }
         .sidebar_bottom .widget-content>a:hover{
             color: var(--accent);
+            margin-left: 7px;
         }
 
         .sidebar_bottom .widget-content a::first-letter {
@@ -549,8 +545,8 @@
         }
 
         .popup-comment.dragging {
-        opacity: 0.92;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+            opacity: 0.92;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
         }
 
         .popup-close-btn {
@@ -630,11 +626,13 @@
         const sidebarBottom = document.querySelector('#sidebar_bottom');
         sidebarBottom.classList.add('no-select');
         sidebarBottom.insertBefore(sidebarBottom.children[4], sidebarBottom.firstChild);
+
         // Nhóm 3 mục DO-GO-COMMENT làm một
-        const second = sidebarBottom.children[1];  // 2nd
-        const third = sidebarBottom.children[2];  // 3rd
-        const fourth = sidebarBottom.children[3];  // 4th
+        const second = sidebarBottom.children[1];
+        const third = sidebarBottom.children[2];
+        const fourth = sidebarBottom.children[3];
         const target = fourth.querySelector('.widget-content');
+
         Array.from(second.querySelectorAll('.widget-content a'))
             .forEach(a => {
                 target.prepend(a);
@@ -647,21 +645,29 @@
         second.remove();
         third.remove();
 
-
-        // Hiệu ứng SIDEBAR
-        const widgets = document.querySelectorAll('.widget.HTML');
+        // Chuyển đổi cấu trúc sang details/summary
+        const widgets = sidebarBottom.querySelectorAll('.widget');
         widgets.forEach((widget, index) => {
             const title = widget.querySelector('h3.title');
             const widgetContent = widget.querySelector('.widget-content');
+
             if (title && widgetContent) {
-                if (index < 5) { // Đóng (mặc định) 5 mục đầu
-                    widgetContent.classList.add('bua-links');
-                } else { // Mở (mặc định) 3 mục cuối CRYPTO - MINEABLE - COMMUNITY
-                    widgetContent.classList.add('bua-links', 'open');
+                const details = document.createElement('details');
+                const summary = document.createElement('summary');
+
+                details.id = widget.id;
+                details.className = widget.className;
+                summary.className = title.className;
+                summary.innerHTML = title.innerHTML;
+
+                // Index < 6 đóng, còn lại mở (CRYPTO - MINEABLE - COMMUNITY)
+                if (index > 5) {
+                    details.open = true;
                 }
-                title.addEventListener('click', () => { // Hiệu ứng đóng/mở khi click vào mỗi mục
-                    widgetContent.classList.toggle('open');
-                });
+
+                details.appendChild(summary);
+                details.appendChild(widgetContent);
+                widget.parentNode.replaceChild(details, widget);
             }
         });
     }
@@ -701,13 +707,8 @@
                         `;
                 }
                 commentPagingSpan += '</span>';
-                postBottom.innerHTML = commentPagingSpan;
                 // Thêm link đến trang comment trực tiếp - mặc định https://www.blogger.com/comment/fullpage/post/blogID/postID
-                const newNumCommentsElement = document.createElement('a');
-                newNumCommentsElement.innerText = numCommentsText;
-                newNumCommentsElement.href = numCommentsElement.closest('.comment-link').href;
-                console.log(newNumCommentsElement.href);
-                postBottom.appendChild(newNumCommentsElement);
+                postBottom.innerHTML = `${commentPagingSpan}<a href="${numCommentsElement.closest('.comment-link').href}" style="margin-left: 0.35em;">${numCommentsText}</a>`;
             }
         });
 
