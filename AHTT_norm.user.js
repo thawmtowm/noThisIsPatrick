@@ -889,7 +889,7 @@ details[open] summary::before {
 .comment-block.deactive {
     display: none;
 }
-.comment-text {
+.comment-text, .post-body {
     font-size: var(--comment-body-text-size);
 }
 `;
