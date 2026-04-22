@@ -49,6 +49,7 @@
         var mrText = getStyledComment(authorUrl, '?', timestamp, comtextid.innerHTML);
         comtextid.innerHTML = mrText;
         comtextid.setAttribute('is-processed', 'true');
+        //console.log(`Successfully ran customUpdateOneCommentContent for comment ${bcId}`);
     };
 
     // Safely apply the override
@@ -66,7 +67,6 @@
                 configurable: true,
                 enumerable: true
             });
-            console.log(`Successfully overridden ${name}`);
         } catch (e) {
             window[name] = func; // Fallback
         }
@@ -768,6 +768,7 @@ details[open] summary::before {
 }
 
 .popup-editor {
+    max-height: unset;
     z-index: 2100;
 }
 
@@ -829,7 +830,7 @@ details[open] summary::before {
     align-items: flex-end;
     /* Align buttons to the right */
     gap: 12px;
-    z-index: 2000;
+    z-index: 2200;
     /* ... existing styles ... */
 }
 
@@ -1316,7 +1317,6 @@ details[open] summary::before {
         if (popupEditor === null) { // Create Popup Comment Editor if poup 1st time
             popupEditor = document.createElement('div');
             popupEditor.classList.add('popup-container', 'popup-editor');
-            popupEditor.style.width = `${commentBlock.offsetWidth - 10}px`;
 
             iframeEditor = document.createElement('iframe');
             iframeEditor.className = 'iframe-editor';
@@ -1339,7 +1339,6 @@ details[open] summary::before {
 
         } else { // Unhide popupEditor when popup agin
             popupEditor.style.display = 'block';
-            popupEditor.style.width = `${commentBlock.offsetWidth - 10}px`;
             iframePostMessage(iframeEditor, 'pasteRef', refMaker(commentBlock));
         }
 
