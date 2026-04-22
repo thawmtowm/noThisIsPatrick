@@ -11,15 +11,101 @@
 // ==/UserScript==
 
 
+
+
 (function () {
     'use strict';
+    /**
+     * OVERRIDE funtion updateOneCommentContent() nhômnhựa của Zì
+     *
+     * https://cdn.jsdelivr.net/gh/antonroch/blogger/blogger.format.gd3.js
+     *
+     */
+
+    // Khaibáo hàm mới để-thaythế, với IntersectionObserver
+    const customUpdateOneCommentContent = function (bcId, idPrefix, authorUrl, timestamp) {
+        var comtextid = document.getElementById(idPrefix + bcId); if (!comtextid) return;
+        if (!comtextid) return;
+        // Observing các-target Đầu và Chân, tránh lỗi với các comment có height quá lớn
+        const targets = comtextid.closest('.comment-block').querySelectorAll('.comment-footer, .comment-header, .comment-author');
+        if (targets.length === 0) return;
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    updateCommentContentLegacy(bcId, idPrefix, authorUrl, timestamp);
+                    targets.forEach(el => obs.unobserve(el));
+                }
+            });
+        }, {
+            rootMargin: '100px',
+            threshold: 0
+        });
+        targets.forEach(el => observer.observe(el));
+    };
+    // Copy paste từ updateOneCommentContent() nhômnhựa của Zì, thêm [attr='is-processed'] để tránh xửlý-lại nhiều lần
+    function updateCommentContentLegacy(bcId, idPrefix, authorUrl, timestamp) {
+        var comtextid = document.getElementById(idPrefix + bcId); if (!comtextid) return;
+        if (comtextid.getAttribute('is-processed') === 'true') return;
+        var mrText = getStyledComment(authorUrl, '?', timestamp, comtextid.innerHTML);
+        comtextid.innerHTML = mrText;
+        comtextid.setAttribute('is-processed', 'true');
+    };
+
+    // Safely apply the override
+    const safeOverride = (name, func) => {
+        try {
+            // Check if the property is already locked
+            const desc = Object.getOwnPropertyDescriptor(window, name);
+            if (desc && !desc.configurable) {
+                window[name] = func;
+                return;
+            }
+            Object.defineProperty(window, name, {
+                value: func,
+                writable: true,
+                configurable: true,
+                enumerable: true
+            });
+            console.log(`Successfully overridden ${name}`);
+        } catch (e) {
+            window[name] = func; // Fallback
+        }
+    };
+
+    safeOverride('updateOneCommentContent', customUpdateOneCommentContent);
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Ngay sau khi HTML(DOMContentLoaded)
+     * Chỉnhsửa meta, CSS,...
+     */
+
     document.addEventListener("DOMContentLoaded", () => {
         applyNewMetaTags();
         applyNewStyles();
-        applySidebarNewOrg();
-        addZZToogleBtn();
+        applyNewSidebarOrg();
         applyNewCommentPaging();
+
+        initActionMenu?.();
+        // Set text size from cookie
+        const savedSize = getBodyTextSizeFromCookie();
+        document.documentElement.style.setProperty('--comment-body-text-size', `${savedSize}px`);
     });
+    /**
+     * Đợi sau khi các Hàm nhôm-nhựa của Zì chạy xong
+     * Observing .comment-block
+     */
     window.addEventListener('load', () => {
 
         const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
@@ -70,7 +156,7 @@
         ['mobile-web-app-capable', 'apple-mobile-web-app-capable'].forEach(name => setMeta(name, 'yes'));
     }
     /**
-     * Zanh sách CSS mới
+     * CSS mới
      */
     function applyNewStyles() {
         // HighlightJS cho block code/pre
@@ -83,556 +169,747 @@
             Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
             document.head.appendChild(element);
         });
+        // CSS
         const newStyles = document.createElement('style');
         newStyles.textContent =
             `
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f4f4f7;
-            --bg-tertiary: #e9e9ee;
-
-            --text-primary: #121212;
-            --text-secondary: #4a4a4a;
-            --text-link: #007bff;
-            --accent: #2a7aef;
-
-            --border-primary: #cccccc;
-            --border-subtle: #eeeeee;
-
-            --text-zizun: blue;
-
-            color-scheme: light dark;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-primary: #1e1e1e;
-                --bg-secondary: #2c2c2c;
-                --bg-tertiary: #444444;
-                --text-primary: #CCCCCC;
-                --text-secondary: #c9c9c9;
-                --text-link: #4493f8;
-                --accent: #2a7aef;
-                --border-primary: #555555;
-                --border-subtle: #333333;
-                --text-zizun: #2196f3;
-            }
-        }
-
-        *::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        *::-webkit-scrollbar-thumb {
-            background: rgba(120, 120, 120, 0.7);
-            border-radius: 6px;
-        }
-
-        .no-select {
-            user-select: none;
-            -webkit-user-select: none; /* For Safari */
-            -moz-user-select: none; /* For Firefox */
-            -ms-user-select: none; /* For older versions of IE */
-        }
-
-        body {
-            color: var(--text-secondary);
-            background-color: var(--bg-primary);
-        }
-        .sidebar-container, .sidebar-container .sidebar_bottom {
-            background-color: var(--bg-primary);
-        }
-        #page_body .FeaturedPost, .Blog .blog-posts .post-outer-container {
-            background-color: var(--bg-primary);
-        }
-        .post-title, .post-title a, .post-title a:hover, .post-title a:visited {
-            color: var(--text-primary);
-            font-size: x-large;
-        }
-        .byline {
-            color: var(--text-secondary);
-        }
-        .search-input input, .Header h1, .Header h1 a, .Header h1 a:hover, .Header h1 a:visited {
-            color: var(--text-primary);
-        }
-        .sticky {
-            background-color: var(--bg-primary);
-        }
-        .sidebar-container .widget .title {
-            color: var(--text-primary);
-        }
-        a {
-            color: var(--text-link);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        a:hover,
-        a:focus {
-            color: var(--accent);
-        }
-
-        .btn-primary {
-            background-color: var(--accent);
-            color: var(--bg-primary);
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease, opacity 0.2s ease;
-        }
-
-
-        input[type="checkbox"],
-        input[type="radio"] {
-            accent-color: var(--accent);
-        }
-        .comment-text .large-img,
-        .comment-text iframe {
-            max-width: 95%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-            border-radius: 5px;
-        }
-
-        .comment-text iframe {
-            aspect-ratio: 4/3;
-        }
-
-        .comment-footer img {
-            display: none;
-        }
-
-        .comment-text pre {
-            font-size: 70%;
-            white-space: pre;
-            word-wrap: break-word;
-        }
-
-        .comment-footer span,
-        .comment-footer a,
-        .comment-author a,
-        .comment-author font,
-        a.comment-ref {
-            font-size: 10px;
-            font-family: 'GIUN_TAHOMA';
-            font-weight: bold;
-        }
-
-        .comment-author a,
-        .comment-author font {
-            font-size: 14px;
-        }
-
-        .comment-go > a::after {
-            content: 'REPLY';
-            color: #169106;
-            padding: 0 5px;
-        }
-
-        a.comment-delete::after {
-            content: 'DELETE';
-            color: #be2323;
-            padding: 0 5px 0 10px;
-        }
-
-        a.comment-ref {
-            border: 1px solid var(--border-primary);
-            padding: 5px;
-            border-radius: 5px;
-            margin-left: 10px;
-        }
-
-        a.comment-ref>i {
-            color: #FF9966 !important;
-        }
-
-
-
-
-
-        .zz-comment .comment-text {
-            color: var(--text-zizun);
-        }
-        .bua-comment .comment-text {
-            color: var(--text-primary);
-            font-family: Tahoma;
-        }
-
-
-
-
-        @media screen and (min-width: 1440px) {
-            .sidebar-container {
-            bottom: 0;
-            position: fixed;
-            margin-top: 0;
-            min-height: 0;
-            overflow-x: hidden;
-            overflow-y: scroll;
-            z-index: 2000;
-            }
-
-            .sidebar-container {
-                position: fixed;
-                top: 0;
-                left: calc(50% - 670px);
-                height: 100vh;
-            }
-        }
-        @media (min-width: 1200px) {
-            .container {
-                width: unset ;
-            }
-        }
-        @media (min-width: 992px) {
-            .container {
-                width: unset;
-            }
-        }
-        @media (min-width: 768px) {
-            .container {
-                width: unset;
-            }
-        }
-        .container {
-            padding-right: unset;
-            padding-left: unset;
-            margin-right: unset;
-            margin-left: unset;
-        }
-
-        @media screen and (min-width: 720px) {
-            .page_body .centered {
-                max-width: unset;
-            }
-            .page_body {
-                margin-left: 0;
-            }
-
-            .page {
-                max-width: 720px;
-                margin: 0 auto;
-            }
-        }
-
-
-        div.widget.Blog .blog-posts .post-outer-container {
-            padding: 0;
-        }
-        .bg-photo-container,
-        .bg-photo-overlay,
-        .skip-navigation {
-            display:none;
-        }
-        .centered-bottom{
-            padding: 0;
-        }
-        .post-body {
-            font: 1.35em san-serif;
-            margin: 0.5em 0;
-            color: var(--text-secondary);
-        }
-        .post {
-            padding: 10px;
-            background: var(--bg-secondary);
-            border-radius: 5px;
-        }
-        .post-snippet .snippet-item {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        #comments {
-            border-top: 0;
-            padding: 5px;
-        }
-
-        #comments-block {
-            padding: 0 0 20px 0;
-        }
-        span.num_comments {
-            color: var(--text-primary);
-        }
-        .comment-paging, #commentpaging {
-            display: inline-block;
-        }
-        .comment-paging a, #commentpaging a {
-            float: left;
-            display: flex;
-            flex-wrap: wrap;
-            font-size: 18px;
-            font-family: 'GIUN_TAHOMA';
-            width: 30px;
-            height: 30px;
-            border-radius: 5px;
-            align-content: center;
-            justify-content: center;
-            margin: 2px;
-            background-color: var(--text-link);
-            color: white;
-        }
-        .comment-paging img {
-            border-radius: 5px;
-            width: 100%;
-            height: 100%;
-        }
-        .comment-paging a:hover, #commentpaging a:hover {
-            text-decoration: none;
-            background-color: rgb(175, 70, 70);
-        }
-
-        span.num_comments {
-            padding-left: 20px;
-        }
-        dd {
-            margin-inline-start: 10px;
-        }
-        .comment-body {
-            margin-bottom: 0;
-            margin: 0 10px;
-            font-size: 120%;
-        }
-        @media screen and (max-width: 720px) {
-            .comment-body {
-                font-size: 110%;
-            }
-            .comment-text .large-img,
-            .comment-text iframe {
-                max-width: 98%;
-            }
-        }
-
-
-        /* Widget */
-        .sidebar-container .widget + .widget {
-            border-top: 0;
-        }
-        .sidebar-container .widget {
-            padding: 0;
-            border-top: 0;
-        }
-        summary {
-            list-style: none;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            padding: 5px 5px;
-        }
-
-        summary::-webkit-details-marker {
-            display: none;
-        }
-                summary::before {
-            content: '›';
-            display: inline-block;
-            margin-right: 10px;
-            font-weight: 100;
-            transition: transform 0.2s ease;
-        }
-
-        details[open] summary::before {
-            transform: rotate(90deg);
-        }
-
-        .widget .title {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: var(--text-primary);
-            line-height: normal;
-        }
-
-        /* Links in the Widget */
-        .sidebar_bottom .widget-content {
-            padding: 0 10px;
-        }
-        .sidebar_bottom .widget-content img {
-            border-radius: 5px;
-        }
-        #HTML1 a:nth-of-type(-n+4) {
-            display: inline-block;
-            margin-bottom: 5px;
-        }
-        #HTML1 a:nth-child(5) {
-            margin-bottom: 10px;
-        }
-        .sidebar_bottom .widget-content>a {
-            color: var(--text-link);
-            font-size: 16px;
-            text-decoration: none;
-            display: block;
-            padding: 5px 0 5px 10px;
-            transition: margin 0.2s ease;
-        }
-        .sidebar_bottom .widget-content>a:hover{
-            color: var(--accent);
-            margin-left: 7px;
-        }
-
-        .sidebar_bottom .widget-content a::first-letter {
-            text-transform: uppercase;
-        }
-
-        .sidebar_bottom .widget-content br {
-            display: none;
-        }
-        #divRecentCommentsButton {
-            margin: 0 0 0 10px;
-        }
-
-
-
-
-
-
-
-
-
-        /* TOOGLE ELEMENTS */
-
-        #zz-toogle-btn {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            width: 40px;
-            height: 40px;
-            background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        .popup-comment {
-            width: calc(100% - 14px);
-            max-width: 700px;
-            /* never wider than screen - safe margins */
-            min-width: 280px;
-            /* readable on small phones */
-            max-height: 61.8vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            position: absolute;
-            z-index: 2000;
-            padding: 5px;
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 5px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-            box-sizing: border-box;
-            pointer-events: auto;
-            cursor: default;
-            /* important */
-            user-select: text;
-            /* allow selecting text inside */
-            touch-action: manipulation;
-            /* better mobile feel */
-            will-change: left, top;
-            /* helps iOS rendering during drag */
-            transform: translate3d(0, 0, 0);
-            /* force GPU layer – smoother drag */
-            -webkit-user-drag: none;
-            /* prevent image/text drag interference */
-        }
-
-        .popup-comment.dragging {
-            opacity: 0.92;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-        }
-
-        .popup-close-btn {
-            position: absolute;
-            top: 8px;
-            right: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .popup-close-btn::after {
-            content: '❌';
-        }
-
-        .popup-comment > p {
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
-        .popup-editor {
-            display: block;
-            position: absolute;
-            z-index: 1000;
-            background-color: var(--border-primary);
-            border: 2px solid var(--border-primary);
-            color: var(--text-secondary);
-            border-radius: 5px;
-            font-family: 'GIUN_TAHOMA';
-            padding-top: 35px;
-        }
-        .iframe-editor {
-            border: 0;
-            width: 100%;
-            height: 55vh;
-        }
-
-        @media (orientation: portrait) and (max-width: 720px) {
-            .iframe-editor {
-                height: 85vh;
-            }
-        }
-        .iframe-blog-cmt {
-            border: 0;
-            width: 100%;
-            min-height: 320px;
-            border-radius: 5px 5px 0 0;
-        }
-        #block-refresh-btn {
-            display: block;
-            margin: 0 auto;
-            border-radius: 5px;
-            padding: 5px;
-            color: #169106;
-            border: 1px solid #be2323;
-            -webkit-appearance: none;
-            appearance: none;
-            font-family: 'GIUN_TAHOMA';
-            font-size: 12px;
-        }
-        #block-refresh-btn.active {
-            color: white;
-            background-color: #169106;
-        }
-
-        `;
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f4f4f7;
+    --bg-tertiary: #e9e9ee;
+
+    --border-primary: #cccccc;
+    --border-subtle: #eeeeee;
+
+    --text-link: #007bff;
+    --text-link-alt: #FF9900;
+    --accent: #2a7aef;
+
+    --text-primary: #121212;
+    --text-secondary: #4a4a4a;
+    --text-zizun: blue;
+    --text-success: #169106;
+    --text-info: #0dcaf0;
+    --text-warning: #FF9966;
+    --text-danger: #be2323;
+
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --border-radius: 5px;
+
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: #1e1e1e;
+        --bg-secondary: #2c2c2c;
+        --bg-tertiary: #444444;
+
+        --border-primary: #444444;
+        --border-subtle: #333333;
+
+        --text-link: #3391ff;
+        --text-link-alt: #FF9900;
+        --accent: #4c9aff;
+
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --text-zizun: #2196f3;
+        --text-success: #2ecc71;
+        --text-info: #6edff6;
+        --text-warning: #ffb38a;
+        --text-danger: #ff5c5c;
+
+        --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        --border-radius: 5px;
+    }
+}
+
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 120, 0.7);
+    border-radius: 6px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+summary,
+button,
+.btn-action-group,
+.post-nav-container {
+    -webkit-user-select: none;
+    /* Safari */
+    -ms-user-select: none;
+    /* IE 10 and 11 */
+    user-select: none;
+    /* Standard syntax */
+}
+
+a,
+code,
+pre,
+p,
+div,
+span,
+font {
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    hyphens: auto;
+}
+
+a {
+    color: var(--text-link);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+a:hover,
+a:focus {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    /* For Safari */
+    -moz-user-select: none;
+    /* For Firefox */
+    -ms-user-select: none;
+    /* For older versions of IE */
+}
+
+.btn-primary {
+    background-color: var(--accent);
+    color: var(--bg-primary);
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--accent);
+}
+
+body {
+    color: var(--text-secondary);
+    background-color: var(--bg-primary);
+}
+
+#page_body .FeaturedPost,
+.Blog .blog-posts .post-outer-container {
+    background-color: var(--bg-primary);
+}
+
+.byline {
+    color: var(--text-secondary);
+}
+
+.search-input input,
+.Header h1,
+.Header h1 a,
+.Header h1 a:hover,
+.Header h1 a:visited {
+    color: var(--text-primary);
+}
+
+.sticky {
+    background-color: var(--bg-primary);
+}
+
+.sidebar-container .widget .title {
+    color: var(--text-primary);
+}
+
+@media screen and (min-width: 1440px) {
+    .sidebar-container {
+        bottom: 0;
+        position: fixed;
+        margin-top: 0;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        z-index: 2000;
+    }
+
+    .sidebar-container {
+        position: fixed;
+        top: 0;
+        left: calc(50% - 670px);
+        height: 100vh;
+    }
+}
+
+@media (min-width: 1200px) {
+    .container {
+        width: unset;
+    }
+}
+
+@media (min-width: 992px) {
+    .container {
+        width: unset;
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        width: unset;
+    }
+}
+
+.container {
+    padding-right: unset;
+    padding-left: unset;
+    margin-right: unset;
+    margin-left: unset;
+}
+
+@media screen and (min-width: 720px) {
+    .page_body .centered {
+        max-width: unset;
+    }
+
+    .page_body {
+        margin-left: 0;
+    }
+
+    .page {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+}
+
+
+div.widget.Blog .blog-posts .post-outer-container {
+    padding: 0;
+}
+
+.bg-photo-container,
+.bg-photo-overlay,
+.skip-navigation {
+    display: none;
+}
+
+.centered-bottom {
+    padding: 0;
+}
+
+.post-body {
+    font: 1.35em san-serif;
+    margin: 0.5em 0;
+    color: var(--text-secondary);
+}
+
+.post {
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.post-title,
+.post-title a,
+.post-title a:hover,
+.post-title a:visited {
+    color: var(--text-primary);
+    font-size: x-large;
+}
+
+.post-snippet .snippet-item {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#comments {
+    border-top: 0;
+    padding: 5px;
+}
+
+
+
+
+
+
+
+
+
+/* Paging */
+span.num_comments {
+    color: var(--text-primary);
+}
+
+.comment-paging,
+#commentpaging {
+    display: inline-block;
+}
+
+.comment-paging a,
+#commentpaging a {
+    float: left;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 16px;
+    font-family: 'GIUN_TAHOMA';
+    width: 30px;
+    height: 30px;
+    border-radius: var(--border-radius);
+    align-content: center;
+    justify-content: center;
+    margin: 2px;
+    background-color: var(--text-link);
+    color: white;
+}
+
+.comment-paging img {
+    border-radius: var(--border-radius);
+    width: 100%;
+    height: 100%;
+}
+
+.comment-paging a:hover,
+#commentpaging a:hover {
+    text-decoration: none;
+    background-color: var(--text-danger);
+}
+
+span.num_comments {
+    padding-left: 20px;
+}
+
+
+
+
+
+
+
+
+
+/* .comment-block */
+#comments-block {
+    padding: 0 0 20px 0;
+}
+
+dd {
+    margin-inline-start: 10px;
+}
+
+.comment-body {
+    margin-bottom: 0;
+    margin: 0 10px;
+    font-size: 120%;
+}
+
+@media screen and (max-width: 720px) {
+    .comment-body {
+        font-size: 110%;
+    }
+
+    .comment-text .large-img,
+    .comment-text iframe {
+        max-width: 98%;
+    }
+}
+
+.zz-comment .comment-text {
+    color: var(--text-zizun);
+}
+
+.bua-comment .comment-text {
+    color: var(--text-primary);
+    font-family: Tahoma;
+}
+
+.comment-text .large-img,
+.comment-text iframe {
+    max-width: 95%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: var(--border-radius);
+}
+
+.comment-text iframe {
+    aspect-ratio: 4/3;
+}
+
+.comment-footer img {
+    display: none;
+}
+
+.comment-text pre {
+    font-size: 70%;
+    white-space: pre;
+    word-wrap: break-word;
+}
+
+.comment-footer span,
+.comment-footer a,
+.comment-author a,
+.comment-author font,
+a.comment-ref {
+    font-size: 10px;
+    font-family: 'GIUN_TAHOMA';
+    font-weight: bold;
+}
+
+.comment-author a,
+.comment-author font {
+    font-size: 14px;
+}
+
+.comment-go>a::after {
+    content: 'REPLY';
+    color: var(--text-success);
+    padding: 0 5px;
+}
+
+a.comment-delete::after {
+    content: 'DELETE';
+    color: var(--text-danger);
+    padding: 0 5px 0 10px;
+}
+
+a.comment-ref {
+    border: 1px solid var(--border-primary);
+    padding: 5px;
+    border-radius: var(--border-radius);
+    margin-left: 10px;
+}
+
+a.comment-ref>i {
+    color: var(--text-warning) !important;
+}
+
+
+
+
+
+
+
+
+/* Sidebar */
+.sidebar-container,
+.sidebar-container .sidebar_bottom {
+    background-color: var(--bg-primary);
+}
+
+.sidebar-container .widget+.widget {
+    border-top: 0;
+}
+
+.sidebar-container .widget {
+    padding: 0;
+    border-top: 0;
+}
+
+summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 5px;
+}
+
+summary::-webkit-details-marker {
+    display: none;
+}
+
+summary::before {
+    content: '›';
+    display: inline-block;
+    margin-right: 10px;
+    font-weight: 100;
+    transition: transform 0.2s ease;
+}
+
+details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.widget .title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--text-primary);
+    line-height: normal;
+}
+
+/* Links in the Widget */
+.sidebar_bottom .widget-content {
+    padding: 0 10px;
+}
+
+.sidebar_bottom .widget-content img {
+    border-radius: var(--border-radius);
+}
+
+#Label1 .show-more,
+#Label1 .show-less {
+    display: none;
+}
+
+#HTML1 a:nth-of-type(-n+4) {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+#HTML1 a:nth-child(5) {
+    margin-bottom: 10px;
+}
+
+.sidebar_bottom .widget-content>a {
+    color: var(--text-link);
+    font-size: 16px;
+    text-decoration: none;
+    display: block;
+    padding: 5px 0 5px 10px;
+    transition: margin 0.2s ease;
+}
+
+.sidebar_bottom .widget-content>a:hover {
+    color: var(--accent);
+    margin-left: 7px;
+}
+
+.sidebar_bottom .widget-content a::first-letter {
+    text-transform: uppercase;
+}
+
+.sidebar_bottom .widget-content br {
+    display: none;
+}
+
+#divRecentCommentsButton {
+    margin: 0 0 0 10px;
+}
+
+
+
+
+
+
+
+
+
+/* TOOGLE ELEMENTS */
+.popup-container {
+    width: calc(100% - 14px);
+    max-width: 720px;
+    /* never wider than screen - safe margins */
+    min-width: 280px;
+    /* readable on small phones */
+    max-height: 61.8vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: absolute;
+    z-index: 2000;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    box-sizing: border-box;
+    display: block;
+    color: var(--text-secondary);
+    font-family: 'GIUN_TAHOMA';
+    padding-top: 35px;
+    cursor: default;
+    /* important */
+    user-select: text;
+    /* allow selecting text inside */
+    touch-action: manipulation;
+    /* better mobile feel */
+    will-change: left, top;
+    /* helps iOS rendering during drag */
+    transform: translate3d(0, 0, 0);
+    /* force GPU layer – smoother drag */
+    -webkit-user-drag: none;
+    /* prevent image/text drag interference */
+}
+
+.popup-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.popup-close-btn::after {
+    content: '❌';
+}
+
+.popup-comment {
+    padding: 5px;
+}
+
+.popup-comment>p {
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.popup-editor {
+    z-index: 2100;
+}
+
+.popup-editor iframe {
+    width: 100%;
+    border: 0;
+}
+
+.popup-editor .iframe-editor {
+    height: 55vh;
+}
+
+@media (orientation: portrait) and (max-width: 720px) {
+    .popup-editor .iframe-editor {
+        height: 85vh;
+    }
+}
+
+.popup-editor .iframe-blog-cmt {
+    min-height: 320px;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.popup-editor #block-refresh-btn {
+    width: 80%;
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: var(--border-radius);
+    padding: 5px;
+    color: var(--text-success);
+    border: 1px solid var(--text-danger);
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 12px;
+}
+
+.popup-editor #block-refresh-btn.active {
+    color: white;
+    background-color: var(--text-success);
+}
+
+
+
+
+
+
+
+
+
+/* FLOATING BUTTON ACTION GROUP  */
+.btn-action-group {
+    position: fixed;
+    top: 20vh;
+    right: calc((100% - min(100%, 700px)) / 2 + 10px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Align buttons to the right */
+    gap: 12px;
+    z-index: 2000;
+    /* ... existing styles ... */
+}
+
+.btn-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    /* 12px spacing requested */
+}
+
+.btn-label {
+    font-size: 14px;
+    color: var(--text-primary);
+    text-shadow: 0 3px 3px rgba(0, 0, 0, 0.4);
+    /* Subtle shading */
+    white-space: nowrap;
+    opacity: 0.8;
+}
+
+/* Optional: Keep the cursor as a pointer but prevent text selection */
+.btn-label,
+.btn-action-group button {
+    cursor: pointer;
+}
+
+.btn-action-group button {
+    width: 40px;
+    height: 40px;
+    background-color: var(--bg-primary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.btn-action-group button:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-subtle);
+}
+
+/* Visibility Logic */
+.btn-sub {
+    display: none;
+}
+
+.btn-action-group.active .btn-sub {
+    display: flex;
+}
+
+
+.comment-block.deactive {
+    display: none;
+}
+.comment-text {
+    font-size: var(--comment-body-text-size);
+}
+`;
         document.head.appendChild(newStyles);
     }
+
     /**
      * Sửa thanh bên SIDEBAR
      */
-    function applySidebarNewOrg() {
-        // Đảo vị trí của LABELS lên đầu
+    function applyNewSidebarOrg() {
+        // Đảo vịtrí của LABELS lên đầu
         const sidebarBottom = document.querySelector('#sidebar_bottom');
         sidebarBottom.classList.add('no-select');
         sidebarBottom.insertBefore(sidebarBottom.children[4], sidebarBottom.firstChild);
 
-        // Nhóm 3 mục DO-GO-COMMENT làm một
+        // Nhóm 3 mục DO-GO-COMMENT làm 1
         const second = sidebarBottom.children[1];
         const third = sidebarBottom.children[2];
         const fourth = sidebarBottom.children[3];
         const target = fourth.querySelector('.widget-content');
-
         Array.from(second.querySelectorAll('.widget-content a'))
             .forEach(a => {
                 target.prepend(a);
@@ -645,12 +922,11 @@
         second.remove();
         third.remove();
 
-        // Chuyển đổi cấu trúc sang details/summary
+        // Chuyểnđổi cấutrúc sang details/summary
         const widgets = sidebarBottom.querySelectorAll('.widget');
         widgets.forEach((widget, index) => {
             const title = widget.querySelector('h3.title');
             const widgetContent = widget.querySelector('.widget-content');
-
             if (title && widgetContent) {
                 const details = document.createElement('details');
                 const summary = document.createElement('summary');
@@ -659,18 +935,17 @@
                 details.className = widget.className;
                 summary.className = title.className;
                 summary.innerHTML = title.innerHTML;
-
-                // Index < 6 đóng, còn lại mở (CRYPTO - MINEABLE - COMMUNITY)
+                // Index > 5 mở (CRYPTO - MINEABLE - COMMUNITY), còn lại đóng
                 if (index > 5) {
                     details.open = true;
                 }
-
                 details.appendChild(summary);
                 details.appendChild(widgetContent);
                 widget.parentNode.replaceChild(details, widget);
             }
         });
     }
+
     /**
      * Sửa comment-paging
      */
@@ -678,14 +953,14 @@
         // Phân trang tại HOME-page
         document.querySelectorAll('.post-bottom').forEach(postBottom => {
             const numCommentsElement = postBottom.querySelector('.num_comments');
-            if (numCommentsElement) { // Đếm số comment và tạo các nút trang cho từng post-bottom
+            if (numCommentsElement) { // Đếm tổng comment và phân trang cho từng post-bottom
                 const numCommentsText = numCommentsElement.innerText;
                 const numComments = parseInt(numCommentsText.replace(/\D/g, ''));
-                const lastPage = Math.ceil(numComments / 200); //200 còm mỗi trang
+                const lastPage = Math.ceil(numComments / 200); // 200-comment/trang
                 const postHref = postBottom.closest('.post').querySelector('.post-title a').href;
 
                 let commentPagingSpan = '<span class="comment-paging">';
-
+                // Ít hơn 3-trang, 3 nút liền nhau
                 if (!lastPage || lastPage === 1) {
                     commentPagingSpan += `<a href="${postHref}">1</a>`;
                 } else if (lastPage === 2) {
@@ -699,7 +974,7 @@
                         <a href="${postHref}?commentPage=2#comments">2</a>
                         <a href="${postHref}?commentPage=3#comments">3</a>
                         `;
-                } else {
+                } else { // Nhiều hơn 3-trang, 2-nút cuối và 1-nút đầutiên
                     commentPagingSpan += `
                         <a href="${postHref}" style="margin-right: 35px">1</a>
                         <a href="${postHref}?commentPage=${lastPage - 1}#comments">${lastPage - 1}</a>
@@ -717,23 +992,23 @@
         const commentPaging = document.getElementById('commentpaging');
         if (commentPaging) {
             const currentCommentPage = commentPaging.querySelector('[name="CurrentCommentPage"]');
-            if (currentCommentPage) { // Đổi màu của Nút trang-hiệntại cho đỡ chói mắt
-                currentCommentPage.style.backgroundColor = '#af4646';
+            if (currentCommentPage) { // Đổi màu Nút[CurrentCommentPage] cho đỡ chói mắt
+                currentCommentPage.style.backgroundColor = 'var(--text-danger)';
                 currentCommentPage.firstChild.setAttribute('color', 'white');
             }
-            // Post có một page có thể gây lỗi, thêm 1 trang để tránh lỗi
+            // Post chỉ có 1-page có thể gây lỗi, thêm mặcđịnh [1] để tránh lỗi
             if (commentPaging.innerHTML === '1') commentPaging.innerHTML = '<a>1</a>';
             // Thêm 4 nút Go XUTENG-TOP-CENTER-BOTTOM
             var linkHtml = `
                 <a href="javascript:xready()"><img src="https://cdn.jsdelivr.net/gh/asinerum/project/gui/web3.gif" title="Enable Web3 Provider"></a>
-                <a href="#page_top"><img src="https://cdn.jsdelivr.net/gh/asinerum/project/gui/up.gif" title="Go top"></a>
-                <a href="#comments"><img src="https://cdn.jsdelivr.net/gh/asinerum/project/gui/mid.gif" title="Go center"></a>
-                <a href="#page_bottom"><img src="https://cdn.jsdelivr.net/gh/asinerum/project/gui/down.gif" title="Go bottom"></a>
+                <a href="#page_top" id="goTopBtn"><img src="https://cdn.jsdelivr.net/gh/asinerum/project/gui/up.gif" title="Go top"></a>
+                <a href="#comments" id="goCommentsBtn"><img src="https://cdn.jsdelivr.net/gh/asinerum/project/gui/mid.gif" title="Go center"></a>
+                <a href="#page_bottom" id="goBottomBtn"><img src="https://cdn.jsdelivr.net/gh/asinerum/project/gui/down.gif" title="Go bottom"></a>
             `;
             commentPaging.innerHTML = linkHtml + commentPaging.innerHTML;
             commentPaging.classList.add('no-select', 'comment-paging');
 
-            // Copy và đặt thêm môt phân trang tại cuối #Blog1_comments-block-wrapper
+            // Clone và đặt thêm .commentpaging tại cuối #Blog1_comments-block-wrapper
             var clonedCommentPaging = commentPaging.cloneNode(true);
             var targetWrapper = document.getElementById('Blog1_comments-block-wrapper');
             targetWrapper.appendChild(clonedCommentPaging);
@@ -757,7 +1032,7 @@
     function applyHighlight(commentBlock) {
         const codeBlocks = commentBlock.querySelectorAll('.comment-text pre');
         codeBlocks.forEach(block => {
-            // Xóa các thẻ <br>
+            // Thay <br> bằng newLine
             let codeContent = block.innerHTML.replace(/<br\s*\/?>/g, '\n');
             block.innerHTML = codeContent;
             // highlight.js
@@ -765,31 +1040,96 @@
 
         });
     };
+
     /**
-     * Nút toogle-zizun
+     * Action Menu
      */
-    function addZZToogleBtn() {
-        // Giao ziện
-        const zzToogleBtn = document.createElement('button');
-        zzToogleBtn.id = 'zz-toogle-btn';
-        zzToogleBtn.textContent = '☰';
-        document.body.appendChild(zzToogleBtn);
-        // Khi click, ẩn hiện thằng không phải Zì isZZ(commentAuthor)
-        zzToogleBtn.addEventListener('click', () => {
-            const commentBlocks = document.querySelectorAll('.comment-block');
-            if (commentBlocks) {
-                commentBlocks.forEach(commentBlock => {
-                    const commentAuthor = commentBlock.querySelector('.comment-author>a');
-                    if (!isZZ(commentAuthor)) {
-                        commentBlock.style.display = commentBlock.style.display === 'none' ? 'block' : 'none';
-                    }
-                });
-            }
+    function initActionMenu() {
+        const actionGroup = document.createElement('div');
+        actionGroup.className = 'btn-action-group';
+
+        // Helper to create button with label
+        const createBtn = (icon, title, onClick, isSub = true, isHiddenOnClick = true) => {
+            const container = document.createElement('div');
+            container.className = `btn-item ${isSub ? 'btn-sub' : ''}`;
+
+            const label = document.createElement('span');
+            label.className = 'btn-label';
+            label.innerText = title;
+
+            const btn = document.createElement('button');
+            btn.innerHTML = icon;
+            btn.onclick = (e) => {
+                onClick(e);
+                if (isHiddenOnClick && isSub) {
+                    actionGroup.classList.remove('active');
+                }
+            };
+
+            container.append(label, btn);
+            return container;
+        };
+
+        const mainBtn = createBtn('⊹', '', () => actionGroup.classList.toggle('active'), false);
+
+        const favBtn = createBtn('💎', 'Favorites', () => {
+            document.querySelectorAll('.comment-block').forEach(commentBlock => {
+                const authorLink = commentBlock.querySelector('.comment-author a');
+                if (typeof isFavoriteBlogger === 'function' && !isFavoriteBlogger(authorLink)) {
+                    commentBlock.classList.toggle('deactive');
+                }
+            });
         });
+
+        const fontUpBtn = createBtn('A+', '', () => handleBodyTextSizeChange(1), true, false);
+        const fontDownBtn = createBtn('A-', '', () => handleBodyTextSizeChange(-1), true, false);
+        const topBtn = createBtn('↑', 'Top', () => document.getElementById('goTopBtn').click());
+        const hashBtn = createBtn('#', 'Comment', () => document.getElementById('goCommentsBtn').click());
+        const botBtn = createBtn('↓', 'Bottom', () => document.getElementById('goBottomBtn').click());
+
+        actionGroup.append(mainBtn, favBtn, topBtn, hashBtn, botBtn, fontUpBtn, fontDownBtn);
+        document.body.appendChild(actionGroup);
     }
 
 
+    /**
+     * Helper của Action Menu: Điềuchỉnh kíchthước chữ comment-body và lưu vào cookie
+     * Sets 'commentBodyTextSize' for 30 days
+     * in cookie and applies it to the root CSS variable --comment-body-text-size
+     */
+    const saveBodyTextSizeToCookie = (size) => {
+        const d = new Date();
+        d.setTime(d.getTime() + (30 * 24 * 60 * 60 * 1000));
+        document.cookie = `commentBodyTextSize=${size};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+    };
 
+    const getBodyTextSizeFromCookie = () => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; commentBodyTextSize=`);
+
+        if (parts.length === 2) {
+            return parseInt(parts.pop().split(';').shift());
+        }
+
+        // Default to 18 if cookie is missing
+        const defaultSize = 18;
+        saveBodyTextSizeToCookie(defaultSize);
+        return defaultSize;
+    };
+
+    const updateBodyTextSize = (delta) => {
+        const root = document.documentElement;
+        const currentSize = parseInt(getComputedStyle(root).getPropertyValue('--comment-body-text-size')) || 18;
+        const newSize = Math.min(Math.max(currentSize + delta, 12), 32);
+
+        root.style.setProperty('--comment-body-text-size', `${newSize}px`);
+        return newSize;
+    };
+
+    const handleBodyTextSizeChange = (delta) => {
+        const newSize = updateBodyTextSize(delta);
+        saveBodyTextSizeToCookie(newSize);
+    };
 
 
 
@@ -816,6 +1156,10 @@
         applyHighlight(commentBlock);
     }
 
+
+    /**
+     * Đóng-khung và màumè cho Ref: (0000)
+     */
     function addCommentRef(commentBlock) {
         commentBlock.querySelectorAll('.comment-body a').forEach(link => {
             if (/#c\d+$/.test(link.href) || /#cmt\.\d+$/.test(link.href)) { // "c847" or "cmt.456"
@@ -865,11 +1209,22 @@
             commentNode = sourceNode ? sourceNode : null;
         }
 
+        if (commentNode) {
+            const commentText = commentNode.querySelector('.comment-text');
+            //if (commentText) return;
+            var bcId = commentText.id.replace('ss-', '');
+            var comid = document.getElementById('is-' + bcId);
+            var authorUrl = comid.getAttribute('authorUrl');
+            var authorName = comid.getAttribute('authorName');
+            var timestamp = comid.getAttribute('timestamp');
+            updateCommentContentLegacy(bcId, 'ss-', authorUrl, timestamp);
+        }
+
         const popup = commentNode
             ? commentNode.cloneNode(true)
             : createFallback(ref.href);
 
-        popup.classList.add('popup-comment');
+        popup.classList.add('popup-container', 'popup-comment');
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'popup-close-btn';
@@ -960,7 +1315,7 @@
 
         if (popupEditor === null) { // Create Popup Comment Editor if poup 1st time
             popupEditor = document.createElement('div');
-            popupEditor.classList.add('popup-editor');
+            popupEditor.classList.add('popup-container', 'popup-editor');
             popupEditor.style.width = `${commentBlock.offsetWidth - 10}px`;
 
             iframeEditor = document.createElement('iframe');
@@ -1012,7 +1367,7 @@
                             blockRefreshBtn = document.createElement('button');
                             blockRefreshBtn.id = 'block-refresh-btn';
                             blockRefreshBtn.classList.add('active');
-                            blockRefreshBtn.textContent = 'BLOCK-REFRESH cóthể làm cô không Đăngnhập được - Click để  TẮT';
+                            blockRefreshBtn.textContent = 'Tắt BLOCK-REFRESH nếu không Đăngnhập được';
                             iframeBlogspotComment.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups';
                             blockRefreshBtn.addEventListener('click', () => {
                                 if (!sandboxEnabled) {
@@ -1087,8 +1442,8 @@
         let initialLeft, initialTop;
 
         el.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('.popup-close-btn') ||
-                e.target.closest('a, button, input, textarea, select')) {
+            if (e.target.closest('a, button, input, textarea, select') ||
+                e.target.closest('.comment-body, .comment-footer')) {
                 return;
             }
 
@@ -1148,28 +1503,26 @@
     }
 
 
-    const isPhone = () => {
+
+    function isPhone() {
         return /Mobi|Android|iPhone|iPad|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
             ('ontouchstart' in window && window.innerWidth <= 1024);
     };
 
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text)
-            .then(() => {
-                console.log("Text successfully copied to clipboard:", text);
-            })
-            .catch((err) => {
-                alert('LỖI khi COPY. Ctrl+A Ctrl+C để COPY');
-                console.error("Failed to copy text to clipboard:", err);
-            });
+    function isZZ(authorLink) {
+        const ids = ['06324965406194061835', '06344674862451687914', '08901517722071939298', 'an_hoang_trung_tuong'];
+        return authorLink && ids.some(id => authorLink.href.endsWith(id));
     }
 
-    function isZZ(authorLink) {
-        return authorLink && (authorLink.href.endsWith('06324965406194061835') ||
-            authorLink.href.endsWith('06344674862451687914') ||
-            authorLink.href.endsWith('08901517722071939298') ||
-            authorLink.href.endsWith('an_hoang_trung_tuong'));
+    function isFavoriteBlogger(authorLink) {
+        const ids = [
+            '06324965406194061835', '06344674862451687914', '08901517722071939298', 'an_hoang_trung_tuong',
+            '04691363077306131049', '14274984856003699657', //'Ly Toet',
+            '07419751018770328206', //'Sweet Hoy'
+        ];
+        return authorLink && ids.some(id => authorLink.href.endsWith(id));
     }
+
     function isVangson(commentBlock) {
         const imgs = commentBlock.querySelectorAll('img');
         for (let img of imgs) {
@@ -1179,6 +1532,7 @@
         }
         return false;
     }
+
     function isCacmac(commentBlock) {
         if (commentBlock.querySelector('.comment-author>a').textContent.startsWith("MADONNALILY")) {
             return true;
@@ -1191,6 +1545,7 @@
         }
         return false;
     }
+
     function refMaker(commentBlock) {
         const commentID = commentBlock.querySelector('.comment-author');
         const commentAuthor = commentBlock.querySelector('.comment-author>a');
@@ -1214,5 +1569,3 @@
         return `<p>${preText} ${postText}</p><p><br></p><p><br></p>`;
     }
 })();
-
-
