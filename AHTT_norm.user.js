@@ -847,8 +847,8 @@ details[open] summary::before {
 
 #textarea-cache-for-copy {
     width: 100%;
-    height: 10em;
-    padding: 1em;
+    height: 1em;
+    padding: 0 10px;
     border: 1px solid var(--border-primary);
     outline: none;
     background-color: var(--bg-secondary);
@@ -1357,9 +1357,12 @@ details[open] summary::before {
             popupEditor.classList.add('popup-container', 'popup-editor');
 
 
+            /*
             // Textarea for Copy
             textareaCacheForCopy = document.createElement('textarea');
             textareaCacheForCopy.id = 'textarea-cache-for-copy';
+            popupEditor.appendChild(textareaCacheForCopy);
+            */
 
             // iframe Meo Comment
             iframeEditor = document.createElement('iframe');
@@ -1377,7 +1380,6 @@ details[open] summary::before {
 
             popupEditor.appendChild(closeEditorBtn);
             popupEditor.appendChild(iframeEditor);
-            popupEditor.appendChild(textareaCacheForCopy);
             makeDraggable(popupEditor);
             document.body.appendChild(popupEditor);
 
@@ -1435,6 +1437,9 @@ details[open] summary::before {
                                 iframeBlogspotComment.src = iframeBlogspotComment.src;
                             });
                             pasteWarningPopup.appendChild(blockRefreshBtn);
+                            pasteWarningPopup.style.top = '35px';
+                            popupEditor.insertBefore(iframeBlogspotComment, popupEditor.firstChild);
+                            /*
                             // Append all to popupEditor
                             popupEditor.appendChild(pasteWarningPopup);
                             if (!isPhone()) {
@@ -1452,6 +1457,7 @@ details[open] summary::before {
                                 pasteWarningPopup.style.bottom = '250px';
                                 popupEditor.appendChild(iframeBlogspotComment);
                             }
+                                */
                         } else { // If can't get postID, popup comment page
                             console.warn('Could not find Blogger IDs.');
                             const commentGoJavascript = commentGo.href.replace('javascript\:', '').split('\;');
@@ -1462,12 +1468,14 @@ details[open] summary::before {
                         iframeBlogspotComment.style.display = 'block';
                     }
 
+                    /*
                     //copyToClipboard(decodedText);
                     if (isPhone()) {
                         textareaCacheForCopy.value = decodeURIComponent(messageFrMeoCmtText);
                         textareaCacheForCopy.select();
                         document.execCommand('copy');
                     }
+                    */
                 }
             }, false);
 
@@ -1583,9 +1591,11 @@ details[open] summary::before {
     async function copyToClipboard(text) {
         try {
             // Decode the text to handle %20, %3A, etc.
-            const decodedText = decodeURIComponent(text);
-            await navigator.clipboard.writeText(decodedText);
-            //console.log('COPIED TEXT TO CLIPBOARD:', text);
+            const blob = new Blob([text], { type: 'text/plain' });
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'text/plain': blob })
+            ]);
+            //console.log('COPIED TEXT...');
         } catch (err) {
             console.error('Error when copying: ', err);
         }
