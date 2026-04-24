@@ -549,14 +549,14 @@ dd {
     aspect-ratio: 4/3;
 }
 
-.comment-footer img {
-    display: none;
-}
-
 .comment-text pre {
     font-size: 70%;
     white-space: pre;
     word-wrap: break-word;
+}
+
+.comment-footer img {
+    display: none;
 }
 
 .comment-footer span,
@@ -585,6 +585,7 @@ a.comment-delete::after {
     color: var(--text-danger);
     padding: 0 5px 0 10px;
 }
+
 
 a.comment-ref {
     border: 1px solid var(--border-primary);
@@ -792,19 +793,42 @@ details[open] summary::before {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
-.popup-editor #block-refresh-btn {
-    width: 80%;
+#warning-popup {
+    width: 200px;
+    height: auto;
+    text-align: center;
     position: absolute;
-    top: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: var(--border-radius);
+    top: 35px;
+    right: 0px;
     padding: 5px;
+    border-radius: 5px;
+    font-size: 12px;
+    color: #4a4a4a;
+    background: #ffffff8a;
+    border: 1px solid var(--text-danger);
+    line-height: 2em;
+}
+
+#warning-popup .code {
+    color: #4a4a4a;
+    background-color: #a2a2a28c;
+    border-radius: 2px;
+    font-size: 10px;
+    padding: 2px;
+    font-weight: bold;
+}
+
+.popup-editor #block-refresh-btn {
+    border-radius: var(--border-radius);
+    padding: 0 2px;
     color: var(--text-success);
     border: 1px solid var(--text-danger);
     -webkit-appearance: none;
     appearance: none;
-    font-size: 12px;
+    font-size: 10px;
+    line-height: 1.5;
+    display: block;
+    margin: 0 auto;
 }
 
 .popup-editor #block-refresh-btn.active {
@@ -812,10 +836,13 @@ details[open] summary::before {
     background-color: var(--text-success);
 }
 
-
-
-
-
+.popup-editor #cache-textarea {
+    width: 100%;
+    height: 1.5em;
+    border: none;
+    resize: none;
+    outline: none;
+}
 
 
 
@@ -1301,7 +1328,8 @@ details[open] summary::before {
     /**
      * Hiện Hộp TRẢLỜI khi click (.comment-go a)
      */
-    var popupEditor = null, iframeEditor = null, iframeBlogspotComment = null, blockRefreshBtn = null, sandboxEnabled = true, closeEditorBtn = null, aTagCopyComment = null;
+    var popupEditor = null, iframeEditor = null, iframeBlogspotComment = null, blockRefreshBtn = null, sandboxEnabled = true,
+        closeEditorBtn = null, aTagCopyComment = null, copyCacheTextTimeout = null;
     function addPopupEditorFunc(commentBlock) {
         const commentGo = commentBlock.querySelector('.comment-go a');
         if (commentGo) {
@@ -1318,6 +1346,7 @@ details[open] summary::before {
             popupEditor = document.createElement('div');
             popupEditor.classList.add('popup-container', 'popup-editor');
 
+            // iframe Meo Comment
             iframeEditor = document.createElement('iframe');
             iframeEditor.className = 'iframe-editor';
             iframeEditor.src = 'https://meo-comment-phake.blogspot.com/';
@@ -1352,26 +1381,41 @@ details[open] summary::before {
             window.addEventListener('message', (e) => {
                 const messageFrMeoCmt = e.data;
                 if (messageFrMeoCmt.action === 'sendBack') {
-                    const decodedText = decodeURIComponent(messageFrMeoCmt.text);
-                    //copyToClipboard(decodedText);
+                    if (copyCacheTextTimeout) clearTimeout(copyCacheTextTimeout);
+                    copyCacheTextTimeout = setTimeout(() => {
+                        const decodedText = decodeURIComponent(messageFrMeoCmt.text);
+                        // console.log('MESSAGE GOT FROM MEO COMMENT:', decodedText);
+                        document.getElementById('cache-textarea').value = decodedText;
+                        copyToClipboard(document.getElementById('cache-textarea').value);
+                        copyCacheTextTimeout = null;
+                    }, 1500);
+
+                    if (iframeBlogspotComment) {
+                        blockRefreshBtn.style.display = iframeBlogspotComment.style.display = 'block';
+                        return;
+                    }
                     if (iframeBlogspotComment === null) {
-                        if (document[hiddenCommentForm]) { // Get postID and blogID to create iframe
-                            // Iframe
+                        if (document[hiddenCommentForm]) { // Get postID and blogID of an-hoang-trung-tuong (blog) to create iframe
+                            // iframe Blogspot Comment
                             const blogID = document.getElementById('blogID').value;
                             const postID = document.getElementById('postID').value;
                             iframeBlogspotComment = document.createElement("iframe");
                             iframeBlogspotComment.src = 'https://www.blogger.com/comment-iframe.g?blogID=' + blogID + '&postID=' + postID;
                             iframeBlogspotComment.className = 'iframe-blog-cmt';
+                            // Warning popup
+                            const warningPopup = document.createElement('div');
+                            warningPopup.id = 'warning-popup';
+                            warningPopup.innerHTML = '↙  <a class="code">Zán</a> <a class="code">Paste</a> <a class="code">Ctrl + V</a> vô... <br>';
                             // Block REFRESH Button
                             blockRefreshBtn = document.createElement('button');
                             blockRefreshBtn.id = 'block-refresh-btn';
                             blockRefreshBtn.classList.add('active');
-                            blockRefreshBtn.textContent = 'Tắt BLOCK-REFRESH nếu không Đăngnhập được';
+                            blockRefreshBtn.textContent = 'Tắt BLOCK-REFRESH nếu không ĐĂNGNHẬP được';
                             iframeBlogspotComment.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups';
                             blockRefreshBtn.addEventListener('click', () => {
                                 if (!sandboxEnabled) {
                                     blockRefreshBtn.classList.add('active');
-                                    blockRefreshBtn.textContent = 'BLOCK-REFRESH cóthể làm cô không Đăngnhập được - Click để  TẮT';
+                                    blockRefreshBtn.textContent = 'Tắt BLOCK-REFRESH nếu không ĐĂNGNHẬP được';
                                     iframeBlogspotComment.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups';
                                 } else {
                                     blockRefreshBtn.classList.remove('active');
@@ -1381,8 +1425,14 @@ details[open] summary::before {
                                 sandboxEnabled = !sandboxEnabled;
                                 iframeBlogspotComment.src = iframeBlogspotComment.src;
                             });
-                            popupEditor.insertBefore(blockRefreshBtn, popupEditor.firstChild);
+                            warningPopup.appendChild(blockRefreshBtn);
+                            // Cache-textarea for paste content (for mobile)
+                            const cacheTextarea = document.createElement('textarea');
+                            cacheTextarea.id = 'cache-textarea';
+                            // Append all to popupEditor
+                            popupEditor.appendChild(warningPopup);
                             popupEditor.insertBefore(iframeBlogspotComment, popupEditor.firstChild);
+                            popupEditor.appendChild(cacheTextarea);
                         } else { // If can't get postID, popup comment page
                             console.warn('Could not find Blogger IDs.');
                             const commentGoJavascript = commentGo.href.replace('javascript\:', '').split('\;');
@@ -1503,6 +1553,18 @@ details[open] summary::before {
 
 
 
+    //COPY
+    async function copyToClipboard(text) {
+        try {
+            // Decode the text to handle %20, %3A, etc.
+            const decodedText = decodeURIComponent(text);
+            await navigator.clipboard.writeText(decodedText);
+            //console.log('COPIED TEXT TO CLIPBOARD:', text);
+        } catch (err) {
+            console.error('Error when copying: ', err);
+        }
+    }
+
     function isPhone() {
         return /Mobi|Android|iPhone|iPad|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
             ('ontouchstart' in window && window.innerWidth <= 1024);
@@ -1557,9 +1619,9 @@ details[open] summary::before {
         } else if (isVangson(commentBlock)) {
             postText = '❤️❤️❤️';
         } else if (isCacmac(commentBlock)) {
-            postText = ' Thưa Các Mác';
+            postText = '';
         } else {
-            postText = '🐄🐖🐊';
+            postText = '';
         }
         if (commentAuthor && commentNo && commentID) {
             //preText = getCommentQuote(decodeURI(commentAuthor.textContent), commentNo.textContent, commentID.id);
