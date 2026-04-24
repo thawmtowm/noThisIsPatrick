@@ -802,14 +802,14 @@ details[open] summary::before {
     border-radius: 5px;
     font-size: 12px;
     color: #4a4a4a;
-    background: #ffffff8a;
+    background-color: #ffffffeb;
     border: 1px solid var(--text-danger);
     line-height: 2em;
 }
 
 .warning-popup .code {
     color: #4a4a4a;
-    background-color: #a2a2a28c;
+    background-color: #a2a2a2be;
     border-radius: 2px;
     font-size: 10px;
     padding: 2px;
@@ -817,14 +817,11 @@ details[open] summary::before {
 }
 
 #paste-warning {
+    top: 35px;
     right: 0;
     border-radius: 15px 5px 5px 30px;
 }
 
-#copy-warning {
-    right: 0;
-    border-radius: 30px 5px 5px 15px;
-}
 
 .popup-editor #block-refresh-btn {
     border-radius: var(--border-radius);
@@ -837,22 +834,12 @@ details[open] summary::before {
     line-height: 1.5;
     display: block;
     margin: 0 auto;
-    border-radius: 5px 5px 5px 30px;
+    border-radius: 5px 5px 5px 20px;
 }
 
 .popup-editor #block-refresh-btn.active {
     color: white;
     background-color: var(--text-success);
-}
-
-#textarea-cache-for-copy {
-    width: 100%;
-    height: 1em;
-    padding: 0 10px;
-    border: 1px solid var(--border-primary);
-    outline: none;
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
 }
 
 
@@ -1339,7 +1326,7 @@ details[open] summary::before {
      * Hiện Hộp TRẢLỜI khi click (.comment-go a)
      */
     var popupEditor = null, iframeEditor = null, iframeBlogspotComment = null, blockRefreshBtn = null, sandboxEnabled = true,
-        closeEditorBtn = null, aTagCopyComment = null, copyCacheTextTimeout = null, textareaCacheForCopy = null;
+        closeEditorBtn = null, aTagCopyComment = null, copyCacheTextTimeout = null;
     function addPopupEditorFunc(commentBlock) {
         const commentGo = commentBlock.querySelector('.comment-go a');
         if (commentGo) {
@@ -1355,14 +1342,6 @@ details[open] summary::before {
         if (popupEditor === null) { // Create Popup Comment Editor if poup 1st time
             popupEditor = document.createElement('div');
             popupEditor.classList.add('popup-container', 'popup-editor');
-
-
-            /*
-            // Textarea for Copy
-            textareaCacheForCopy = document.createElement('textarea');
-            textareaCacheForCopy.id = 'textarea-cache-for-copy';
-            popupEditor.appendChild(textareaCacheForCopy);
-            */
 
             // iframe Meo Comment
             iframeEditor = document.createElement('iframe');
@@ -1437,27 +1416,8 @@ details[open] summary::before {
                                 iframeBlogspotComment.src = iframeBlogspotComment.src;
                             });
                             pasteWarningPopup.appendChild(blockRefreshBtn);
-                            pasteWarningPopup.style.top = '35px';
                             popupEditor.insertBefore(iframeBlogspotComment, popupEditor.firstChild);
-                            /*
-                            // Append all to popupEditor
                             popupEditor.appendChild(pasteWarningPopup);
-                            if (!isPhone()) {
-                                pasteWarningPopup.style.top = '35px';
-                                popupEditor.insertBefore(iframeBlogspotComment, popupEditor.firstChild);
-                            } else {
-                                // Copy-Warning popup
-                                const copyWarningPopup = document.createElement('div');
-                                copyWarningPopup.className = 'warning-popup';
-                                copyWarningPopup.id = 'copy-warning';
-                                copyWarningPopup.innerHTML = 'Điệnthoại cần <a class="code">Copy</a> tại ĐÂY... <br>';
-                                copyWarningPopup.style.bottom = '325px';
-                                popupEditor.appendChild(copyWarningPopup);
-
-                                pasteWarningPopup.style.bottom = '250px';
-                                popupEditor.appendChild(iframeBlogspotComment);
-                            }
-                                */
                         } else { // If can't get postID, popup comment page
                             console.warn('Could not find Blogger IDs.');
                             const commentGoJavascript = commentGo.href.replace('javascript\:', '').split('\;');
@@ -1467,15 +1427,6 @@ details[open] summary::before {
                         blockRefreshBtn.style.display = 'block';
                         iframeBlogspotComment.style.display = 'block';
                     }
-
-                    /*
-                    //copyToClipboard(decodedText);
-                    if (isPhone()) {
-                        textareaCacheForCopy.value = decodeURIComponent(messageFrMeoCmtText);
-                        textareaCacheForCopy.select();
-                        document.execCommand('copy');
-                    }
-                    */
                 }
             }, false);
 
