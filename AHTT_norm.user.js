@@ -1464,8 +1464,9 @@ details[open] summary::before {
 
                     //copyToClipboard(decodedText);
                     if (isPhone()) {
-                        textareaCacheForCopy.value = decodeURIComponent(decodeURIComponent(messageFrMeoCmtText));
-                        copyToClipboard(textareaCacheForCopy.value);
+                        textareaCacheForCopy.value = decodeURIComponent(messageFrMeoCmtText);
+                        textareaCacheForCopy.select();
+                        document.execCommand('copy');
                     }
                 }
             }, false);
