@@ -845,6 +845,16 @@ details[open] summary::before {
     background-color: var(--text-success);
 }
 
+#textarea-cache-for-copy {
+    width: 100%;
+    height: 10em;
+    padding: 1em;
+    border: 1px solid var(--border-primary);
+    outline: none;
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+}
+
 
 
 
@@ -858,8 +868,7 @@ details[open] summary::before {
     align-items: flex-end;
     /* Align buttons to the right */
     gap: 12px;
-    z-index: 2200;
-    /* ... existing styles ... */
+    z-index: 2000;
 }
 
 .btn-item {
@@ -1330,7 +1339,7 @@ details[open] summary::before {
      * Hiện Hộp TRẢLỜI khi click (.comment-go a)
      */
     var popupEditor = null, iframeEditor = null, iframeBlogspotComment = null, blockRefreshBtn = null, sandboxEnabled = true,
-        closeEditorBtn = null, aTagCopyComment = null, copyCacheTextTimeout = null;
+        closeEditorBtn = null, aTagCopyComment = null, copyCacheTextTimeout = null, textareaCacheForCopy = null;
     function addPopupEditorFunc(commentBlock) {
         const commentGo = commentBlock.querySelector('.comment-go a');
         if (commentGo) {
@@ -1346,6 +1355,11 @@ details[open] summary::before {
         if (popupEditor === null) { // Create Popup Comment Editor if poup 1st time
             popupEditor = document.createElement('div');
             popupEditor.classList.add('popup-container', 'popup-editor');
+
+
+            // Textarea for Copy
+            textareaCacheForCopy = document.createElement('textarea');
+            textareaCacheForCopy.id = 'textarea-cache-for-copy';
 
             // iframe Meo Comment
             iframeEditor = document.createElement('iframe');
@@ -1363,6 +1377,7 @@ details[open] summary::before {
 
             popupEditor.appendChild(closeEditorBtn);
             popupEditor.appendChild(iframeEditor);
+            popupEditor.appendChild(textareaCacheForCopy);
             makeDraggable(popupEditor);
             document.body.appendChild(popupEditor);
 
@@ -1382,9 +1397,7 @@ details[open] summary::before {
             window.addEventListener('message', (e) => {
                 const messageFrMeoCmt = e.data;
                 if (messageFrMeoCmt.action === 'sendBack') {
-                    //const decodedText = decodeURIComponent(messageFrMeoCmt.text);
-                    //copyToClipboard(decodedText);
-
+                    const messageFrMeoCmtText = messageFrMeoCmt.text;
                     if (iframeBlogspotComment) {
                         blockRefreshBtn.style.display = iframeBlogspotComment.style.display = 'block';
                         return;
@@ -1435,7 +1448,7 @@ details[open] summary::before {
                                 copyWarningPopup.innerHTML = 'Điệnthoại cần <a class="code">Copy</a> tại ĐÂY... <br>';
                                 copyWarningPopup.style.bottom = '325px';
                                 popupEditor.appendChild(copyWarningPopup);
-                                
+
                                 pasteWarningPopup.style.bottom = '250px';
                                 popupEditor.appendChild(iframeBlogspotComment);
                             }
@@ -1447,6 +1460,12 @@ details[open] summary::before {
                     } else {
                         blockRefreshBtn.style.display = 'block';
                         iframeBlogspotComment.style.display = 'block';
+                    }
+
+                    //copyToClipboard(decodedText);
+                    if (isPhone()) {
+                        textareaCacheForCopy.value = decodeURIComponent(decodeURIComponent(messageFrMeoCmtText));
+                        copyToClipboard(textareaCacheForCopy.value);
                     }
                 }
             }, false);
