@@ -838,10 +838,11 @@ details[open] summary::before {
 
 .popup-editor #cache-textarea {
     width: 100%;
-    height: 1.5em;
+    height: 2.5em;
     border: none;
     resize: none;
     outline: none;
+    padding: 0.5em;
 }
 
 
@@ -1429,6 +1430,18 @@ details[open] summary::before {
                             // Cache-textarea for paste content (for mobile)
                             const cacheTextarea = document.createElement('textarea');
                             cacheTextarea.id = 'cache-textarea';
+                            document.addEventListener('focusin', (e) => {
+                                if (e.target.id === 'cache-textarea') {
+                                    const el = e.target;
+                                    if (copyCacheTextTimeout) clearTimeout(copyCacheTextTimeout);
+                                    copyCacheTextTimeout = setTimeout(() => {
+                                        el.select();
+                                        el.setSelectionRange(0, el.value.length);
+                                        copyToClipboard(el.value);
+                                        copyCacheTextTimeout = null;
+                                    }, 500);
+                                }
+                            });
                             // Append all to popupEditor
                             popupEditor.appendChild(warningPopup);
                             popupEditor.insertBefore(iframeBlogspotComment, popupEditor.firstChild);
