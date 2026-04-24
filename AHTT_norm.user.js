@@ -1425,7 +1425,7 @@ details[open] summary::before {
                             // Append all to popupEditor
                             popupEditor.appendChild(pasteWarningPopup);
                             if (!isPhone()) {
-                                pasteWarningPopup.top = '35px';
+                                pasteWarningPopup.style.top = '35px';
                                 popupEditor.insertBefore(iframeBlogspotComment, popupEditor.firstChild);
                             } else {
                                 // Copy-Warning popup
