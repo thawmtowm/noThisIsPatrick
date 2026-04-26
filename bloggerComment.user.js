@@ -32,7 +32,7 @@
         window.addEventListener("message", (e) => {
             if (e.data.action === "AHTT_SEND_TEXT_TO_BLG") {
                 const messageText = decodeURIComponent(e.data.text);
-                const bbCodeTextArea = document.querySelector('textarea[aria-label="Enter Comment"]');
+                const bbCodeTextArea = document.querySelector('textarea[data-initial-value]');
                 bbCodeTextArea.value = messageText;
                 bbCodeTextArea.setAttribute('data-initial-value', messageText);
 
