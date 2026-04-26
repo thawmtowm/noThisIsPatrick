@@ -39,10 +39,6 @@
                 const length = messageText.length;
                 bbCodeTextArea.focus();
                 bbCodeTextArea.setSelectionRange(length, length);
-
-                replyContainerHeight.classList.add('CDELXb');
-                //replyContainerWidth.querySelector('div[role="button"]');
-                
             }
         }, false);
 
