@@ -11,10 +11,10 @@
 // @run-at       document-start
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
     function init() {
-        const bbCodeTextArea = document.querySelector('textarea[aria-label="Enter Comment"]');
+        const bbCodeTextArea = document.querySelector('textarea[jscontroller][jsaction][data-initial-value]');
 
         // Check if element exists
         if (!bbCodeTextArea) return false;

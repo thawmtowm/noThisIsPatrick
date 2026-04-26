@@ -783,15 +783,6 @@ details[open] summary::before {
     height: 50vh;
 }
 
-@media (orientation: portrait) and (max-width: 720px) {
-    .popup-editor .iframe-editor {
-        height: 80vh;
-    }
-    #paste-warning {
-        top: calc(80vh + 40px);
-    }
-}
-
 .popup-editor .iframe-blogger-cmt {
     height: 320px;
     border-radius: var(--border-radius) var(--border-radius) 0 0;
@@ -859,6 +850,16 @@ details[open] summary::before {
 .popup-editor #block-refresh-btn.active {
     color: white;
     background-color: var(--text-success);
+}
+
+
+@media (orientation: portrait) and (max-width: 720px) {
+    .popup-editor .iframe-editor {
+        height: 80vh;
+    }
+    #paste-warning {
+        top: calc(80vh + 40px);
+    }
 }
 
 
@@ -1381,7 +1382,7 @@ details[open] summary::before {
                     pasteWarningPopup = document.createElement('div');
                     pasteWarningPopup.className = 'warning-popup';
                     pasteWarningPopup.id = 'paste-warning';
-                    //pasteWarningPopup.innerHTML = '↙  <a class="code">Paste</a> <a class="code">Ctrl + V</a> vô ĐÂY nè...<br>';
+                    //pasteWarningPopup.innerHTML = '↙  <a class="code">Paste</a> <a class="code">Ctrl + V</a> vô ĐÂY...<br>';
                     pasteWarningPopup.innerHTML = '↙  Gõ thêm một zấu-cách <a class="code">ㅤ</a> vô<br>';
                     // Block REFRESH Button
                     blockRefreshBtn = document.createElement('button');
@@ -1413,7 +1414,6 @@ details[open] summary::before {
 
                 popupEditor.append(iframeMeoComment, closeEditorBtn);
 
-                movePopupEditorAround(e);
                 makeDraggable(popupEditor);
 
                 document.body.appendChild(popupEditor);
@@ -1422,6 +1422,8 @@ details[open] summary::before {
                 popupEditor.style.display = 'block';
                 sendMessageToIframe(iframeMeoComment, 'AHTT_SEND_REF_TO_MEOCMT', MEO_COMMENT_BLOG_URL, refMaker(commentBlock));
             }
+            // Set position for popupEditor
+            movePopupEditorAround(e);
         } else { // Có lỗi, thì chơi hàng-mặcđịnh cụa Zì
             console.warn('Could not find Blogger IDs.');
             const commentGoJavascript = commentGo.href.replace('javascript\:', '').split('\;');
