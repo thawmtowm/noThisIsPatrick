@@ -14,7 +14,7 @@
 (function () {
     'use strict';
     function init() {
-        const bbCodeTextArea = document.querySelector('textarea[jscontroller][jsaction][data-initial-value]');
+        const bbCodeTextArea = document.querySelector('textarea[data-initial-value]');
 
         // Check if element exists
         if (!bbCodeTextArea) return false;
@@ -31,8 +31,18 @@
 
         window.addEventListener("message", (e) => {
             if (e.data.action === "AHTT_SEND_TEXT_TO_BLG") {
+                const messageText = decodeURIComponent(e.data.text);
                 const bbCodeTextArea = document.querySelector('textarea[aria-label="Enter Comment"]');
-                bbCodeTextArea.value = decodeURIComponent(e.data.text);
+                bbCodeTextArea.value = messageText;
+                bbCodeTextArea.setAttribute('data-initial-value', messageText);
+
+                const length = messageText.length;
+                bbCodeTextArea.focus();
+                bbCodeTextArea.setSelectionRange(length, length);
+
+                replyContainerHeight.classList.add('CDELXb');
+                //replyContainerWidth.querySelector('div[role="button"]');
+                
             }
         }, false);
 

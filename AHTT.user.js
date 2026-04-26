@@ -783,6 +783,12 @@ details[open] summary::before {
     height: 50vh;
 }
 
+@media (orientation: portrait) and (max-width: 720px) {
+    .popup-editor .iframe-editor {
+        height: 80vh;
+    }
+}
+
 .popup-editor .iframe-blogger-cmt {
     height: 320px;
     border-radius: var(--border-radius) var(--border-radius) 0 0;
@@ -797,7 +803,7 @@ details[open] summary::before {
     border-radius: 5px;
     font-size: 12px;
     color: #4a4a4a;
-    background-color: #ffffffeb;
+    background-color: #fffffff2;
     border: 1px solid var(--text-danger);
     line-height: 2em;
 }
@@ -827,15 +833,15 @@ details[open] summary::before {
 }
 
 #paste-warning {
-    top: calc(50vh + 40px);
-    right: 2px;
-    border-radius: 15px 5px 5px 30px;
+    bottom: 1px;
+    right: 1px;
+    border-radius: 30px 5px 5px 15px;
 }
 
 
 .popup-editor #block-refresh-btn {
     border-radius: var(--border-radius);
-    padding: 0 5px 0 10px;
+    padding: 5px 5px 5px 10px;
     color: var(--text-success);
     border: 1px solid var(--text-danger);
     -webkit-appearance: none;
@@ -844,22 +850,12 @@ details[open] summary::before {
     line-height: 1.5;
     display: block;
     margin: 0 auto;
-    border-radius: 5px 5px 5px 20px;
+    border-radius: 15px 5px 5px 5px;
 }
 
 .popup-editor #block-refresh-btn.active {
     color: white;
     background-color: var(--text-success);
-}
-
-
-@media (orientation: portrait) and (max-width: 720px) {
-    .popup-editor .iframe-editor {
-        height: 80vh;
-    }
-    #paste-warning {
-        top: calc(80vh + 40px);
-    }
 }
 
 
@@ -1382,8 +1378,8 @@ details[open] summary::before {
                     pasteWarningPopup = document.createElement('div');
                     pasteWarningPopup.className = 'warning-popup';
                     pasteWarningPopup.id = 'paste-warning';
-                    //pasteWarningPopup.innerHTML = '↙  <a class="code">Paste</a> <a class="code">Ctrl + V</a> vô ĐÂY...<br>';
-                    pasteWarningPopup.innerHTML = '↙  Gõ thêm một zấu-cách <a class="code">ㅤ</a> vô<br>';
+                    //pasteWarningPopup.innerHTML = '↙↖  <a class="code">Paste</a> <a class="code">Ctrl + V</a> vô ĐÂY...<br>';
+                    pasteWarningPopup.innerHTML = '↖  Gõ thêm một zấu-cách <a class="code">⌴</a> vô<br>';
                     // Block REFRESH Button
                     blockRefreshBtn = document.createElement('button');
                     blockRefreshBtn.id = 'block-refresh-btn';
@@ -1433,15 +1429,19 @@ details[open] summary::before {
 
     function movePopupEditorAround(e) {
         if (popupEditor) {
-            const screenWidth = window.innerWidth;
-            const cloneWidth = popupEditor.offsetWidth;
-            let mouseX = e.pageX + 10;
-            if (mouseX + cloneWidth > screenWidth) {
-                mouseX = (screenWidth - cloneWidth) / 2;
-            }
-            let mouseY = e.pageY + 10;
-            popupEditor.style.left = `${mouseX}px`;
-            popupEditor.style.top = `${mouseY}px`;
+            const viewportWidth = window.innerWidth;
+            const editorWidth = popupEditor.offsetWidth;
+
+            // Calculate the absolute top (current scroll + 7px)
+            const absoluteTop = window.scrollY + 7;
+
+            // Calculate the absolute left to keep it 7px from the right edge
+            // (Scroll offset + total width - editor width - margin)
+            const absoluteLeft = window.scrollX + (viewportWidth - editorWidth - 7);
+
+            popupEditor.style.top = `${absoluteTop}px`;
+            popupEditor.style.left = `${absoluteLeft}px`;
+            popupEditor.style.right = 'auto'; // Ensure right doesn't interfere
         }
     }
     function activeJavascriptOfCommentGo(href) {
