@@ -25,7 +25,7 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/note.html",
+  "start_url": "/noThisIsPatrick/note.html",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "display": "standalone",
