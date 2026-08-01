@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
+        <title>M Note</title>
+
+        <!-- Generic Web App & Theme -->
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="theme-color" content="#ffffff">
+        <link rel="manifest" href="icon/m-note-manifest.json">
+
+        <!-- Apple / iOS Support -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="M Note">
+        <link rel="apple-touch-icon" href="icon/m-note-icon-192.png">
+
+        <!-- Windows / Microsoft Support -->
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="icon/m-note-icon-192.png">
+        <meta name="msapplication-tap-highlight" content="no">
+
+        <!-- Standard Favicon -->
+        <link rel="icon" type="image/png" sizes="32x32" href="icon/m-note-icon-32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="icon/m-note-icon-16.png">
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            *::-webkit-scrollbar {
+                width: 3px;
+                height: 3px;
+            }
+
+            *::-webkit-scrollbar-thumb {
+                background: rgba(120, 120, 120, 0.7);
+                border-radius: 3px;
+            }
+
+            body {
+                font-family: system-ui, -apple-system, sans-serif;
+                margin: 1rem;
+                background-color: #f8fafc;
+                color: #1e293b;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 700px;
+                margin: 0 auto;
+            }
+
+            .collapsible {
+                margin-bottom: 0.05rem;
+                border: 1px solid #cbd5e1;
+                border-radius: 4px;
+                overflow: hidden;
+            }
+
+            .btn-collapsible {
+                background-color: #475569;
+                color: white;
+                cursor: pointer;
+                padding: 0.75em 1em;
+                width: 100%;
+                border: none;
+                text-align: left;
+                outline: none;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                user-select: none;
+                -webkit-user-select: none;
+            }
+
+            .btn-collapsible:hover {
+                background-color: #334155;
+            }
+
+            /* Caret icon in ::before */
+            .btn-collapsible::before {
+                content: "►";
+                display: inline-flex;
+                justify-content: center;
+                align-items: center;
+                width: 1.5em;
+                /* Same width as line number container */
+                margin-right: 0.5em;
+                font-size: 12px;
+                transition: transform 0.2s ease;
+                flex-shrink: 0;
+            }
+
+            /* Caret rotation when parent .collapsible has .active */
+            .collapsible.active .btn-collapsible::before {
+                transform: rotate(90deg);
+            }
+
+            /* Display total value in ::after */
+            .btn-collapsible::after {
+                content: attr(data-total);
+                margin-left: auto;
+                font-weight: bold;
+                font-size: 14px;
+                background-color: rgba(255, 255, 255, 0.2);
+                padding: 2px 8px;
+                border-radius: 12px;
+            }
+
+            .content {
+                min-height: 200px;
+                max-height: 500px;
+                padding: 0.5em;
+                display: none;
+                overflow-y: auto;
+                background-color: #ffffff;
+                counter-reset: line-num -7;
+                outline: none;
+            }
+
+            /* Show content when parent div.collapsible contains .active */
+            .collapsible.active .content {
+                display: block;
+            }
+
+            .content p {
+                margin: 0;
+                padding: 2px 0 2px 2em;
+                /* Adjusted padding to align text perfectly with button text */
+                position: relative;
+                min-height: 1.25em;
+                line-height: 1.25em;
+                counter-increment: line-num;
+                outline: none;
+                word-break: break-word;
+            }
+
+            /* Line number display in ::before */
+            .content p::before {
+                content: counter(line-num);
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 1.5em;
+                /* Same width as .btn-collapsible::before */
+                text-align: right;
+                color: #94a3b8;
+                font-size: 12px;
+                user-select: none;
+                -webkit-user-select: none;
+            }
+
+            /* Hide line number for the first 7 paragraphs */
+            .content p:nth-child(-n+7)::before {
+                content: "";
+            }
+
+            #btn-add-collapsible {
+                display: block;
+                width: 100%;
+                padding: 0.75em;
+                background-color: #0284c7;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 18px;
+                font-weight: bold;
+                cursor: pointer;
+                margin-top: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            #btn-add-collapsible:hover {
+                background-color: #0369a1;
+            }
+
+            #total-section-value,
+            .total {
+                font-size: 18px;
+                font-weight: bold;
+                padding: 1em;
+                background-color: #e2e8f0;
+                border-radius: 4px;
+                text-align: right;
+            }
+
+            #backup-collapsible {
+                display: none;
+                width: 100%;
+                height: 500px;
+                resize: none;
+                margin-top: 10px;
+                padding: 0.5em;
+                box-sizing: border-box;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+                font-size: 16px;
+                color: #1e293b;
+                background-color: #ffffff;
+                border: 1px solid #cbd5e1;
+                border-radius: 4px;
+                outline: none;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            }
+
+            #backup-collapsible.active {
+                display: block;
+            }
+
+            #backup-collapsible:focus {
+                border-color: #0284c7;
+                box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+            }
+        </style>
+    </head>
+
+<body>
+    <div class="container">
+        <div id="total-section-value" class="total">Total All Sections: 0</div>
+        <button type="button" id="btn-add-collapsible">+</button>
+        <textarea id="backup-collapsible" placeholder="JSON Backup"></textarea>
+    </div>
+
+    <script>
+        const bodyContainer = document.querySelector(".container");
+        const DB_NAME = "AppDatabase";
+        const DB_VERSION = 1;
+        const STORE_SECTIONS = "sections";
+        const STORE_APP_STATE = "appState";
+
+        let db = null;
+
+        // --- IndexedDB Setup ---
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains(STORE_SECTIONS)) {
+                        database.createObjectStore(STORE_SECTIONS, { keyPath: "index" });
+                    }
+                    if (!database.objectStoreNames.contains(STORE_APP_STATE)) {
+                        database.createObjectStore(STORE_APP_STATE, { keyPath: "key" });
+                    }
+                };
+
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = (e) => {
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        function saveSectionToDB(sectionIndex) {
+            if (!db) return;
+
+            const sections = document.querySelectorAll(".collapsible");
+            const section = sections[sectionIndex];
+            if (!section) return;
+
+            const btn = section.querySelector(".btn-collapsible");
+            const content = section.querySelector(".content");
+            const paragraphs = Array.from(content.querySelectorAll("p"));
+
+            const data = {
+                index: sectionIndex,
+                sectionName: btn.firstChild ? btn.firstChild.nodeValue.trim() : btn.textContent.trim(),
+                "section-total": btn.getAttribute("data-total") || "0",
+                "section-text": paragraphs.map(p => p.innerText.replace(/\n/g, "")),
+                "is-activated": section.classList.contains("active")
+            };
+
+            const tx = db.transaction(STORE_SECTIONS, "readwrite");
+            tx.objectStore(STORE_SECTIONS).put(data);
+
+            saveStateToDB("currentEditing", sectionIndex);
+        }
+
+        function saveStateToDB(key, value) {
+            if (!db) return;
+            const tx = db.transaction(STORE_APP_STATE, "readwrite");
+            tx.objectStore(STORE_APP_STATE).put({ key: key, value: value });
+        }
+
+        function loadAllDataFromDB() {
+            return new Promise((resolve) => {
+                if (!db) return resolve({ sections: [], currentEditing: null });
+
+                const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE], "readonly");
+                const sectionsStore = tx.objectStore(STORE_SECTIONS);
+                const stateStore = tx.objectStore(STORE_APP_STATE);
+
+                const sectionsReq = sectionsStore.getAll();
+                const editingReq = stateStore.get("currentEditing");
+
+                tx.oncomplete = () => {
+                    resolve({
+                        sections: sectionsReq.result || [],
+                        currentEditing: editingReq.result ? editingReq.result.value : null
+                    });
+                };
+
+                tx.onerror = () => {
+                    resolve({ sections: [], currentEditing: null });
+                };
+            });
+        }
+
+        async function updateBackupInputFromDB() {
+            const backupInput = document.querySelector("#backup-collapsible");
+            if (!backupInput || !db) return;
+
+            const { sections } = await loadAllDataFromDB();
+            sections.sort((a, b) => a.index - b.index);
+            backupInput.value = JSON.stringify(sections);
+        }
+
+        function applyBackupToDBAndUI(jsonString) {
+            if (!db) return;
+
+            try {
+                const sectionsData = JSON.parse(jsonString);
+                if (!Array.isArray(sectionsData)) return;
+
+                const tx = db.transaction(STORE_SECTIONS, "readwrite");
+                const store = tx.objectStore(STORE_SECTIONS);
+                store.clear();
+
+                sectionsData.forEach(item => {
+                    store.put(item);
+                });
+
+                tx.oncomplete = () => {
+                    renderUIFromDB();
+                };
+            } catch (err) {
+                console.error("Invalid JSON input for backup data", err);
+            }
+        }
+
+        async function renderUIFromDB() {
+            const { sections: savedSections, currentEditing } = await loadAllDataFromDB();
+
+            document.querySelectorAll(".collapsible").forEach(el => el.remove());
+
+            const totalElem = document.querySelector("#total-section-value, .total");
+
+            if (savedSections && savedSections.length > 0) {
+                savedSections.sort((a, b) => a.index - b.index);
+                savedSections.forEach(data => {
+                    const section = createCollapsibleSection(data.index + 1, data);
+                    bodyContainer.insertBefore(section, totalElem);
+                });
+            } else {
+                for (let i = 1; i <= 3; i++) {
+                    const section = createCollapsibleSection(i);
+                    bodyContainer.insertBefore(section, totalElem);
+                }
+            }
+
+            updateSectionTotals();
+
+            if (currentEditing !== null && currentEditing !== undefined) {
+                const sections = document.querySelectorAll(".collapsible");
+                if (sections[currentEditing]) {
+                    const targetContent = sections[currentEditing].querySelector(".content");
+                    targetContent.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }
+        }
+
+        // --- Core Functions ---
+        function createCollapsibleSection(index, savedData = null) {
+            const container = document.createElement("div");
+            container.className = "collapsible";
+            if (savedData && savedData["is-activated"]) {
+                container.classList.add("active");
+            }
+
+            const defaultTitle = savedData ? savedData.sectionName : `Section ${index}`;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "btn-collapsible";
+            btn.setAttribute("data-total", savedData ? savedData["section-total"] : "0");
+            btn.textContent = defaultTitle;
+
+            const content = document.createElement("div");
+            content.className = "content";
+            content.contentEditable = "true";
+
+            const savedTextArray = (savedData && savedData["section-text"]) ? savedData["section-text"] : [];
+            const lineCount = Math.max(40, savedTextArray.length);
+
+            for (let i = 0; i < lineCount; i++) {
+                const p = document.createElement("p");
+                let lineText = "";
+
+                if (savedTextArray[i] !== undefined) {
+                    lineText = savedTextArray[i];
+                } else if (i === 0) {
+                    lineText = defaultTitle;
+                }
+
+                if (lineText.trim() === "") {
+                    p.appendChild(document.createElement("br"));
+                } else {
+                    p.textContent = lineText;
+                }
+                content.appendChild(p);
+            }
+
+            container.appendChild(btn);
+            container.appendChild(content);
+            return container;
+        }
+
+        function updateSectionTotals() {
+            const sections = document.querySelectorAll(".collapsible");
+            let grandTotal = 0;
+
+            sections.forEach((section, idx) => {
+                const btn = section.querySelector(".btn-collapsible");
+                const content = section.querySelector(".content");
+                const paragraphs = content.querySelectorAll("p");
+
+                if (paragraphs.length === 0) return;
+
+                const firstPText = paragraphs[0].textContent.trim();
+                const titleText = firstPText || `Section ${idx + 1}`;
+
+                if (btn.firstChild && btn.firstChild.nodeType === Node.TEXT_NODE) {
+                    btn.firstChild.nodeValue = titleText;
+                } else {
+                    btn.textContent = titleText;
+                }
+
+                let totalValue = 0;
+                for (let i = 1; i < paragraphs.length; i++) {
+                    const pText = paragraphs[i].textContent || "";
+                    const cleanedText = pText.trim();
+                    if (!cleanedText) continue;
+
+                    const words = cleanedText.split(/\s+/);
+                    words.forEach(word => {
+                        if (!word) return;
+
+                        if (/[xX]/.test(word)) {
+                            const parts = word.split(/[xX]/);
+                            let product = 1;
+                            let isValid = true;
+
+                            for (let j = 0; j < parts.length; j++) {
+                                const numStr = parts[j].replace(/,/g, "").trim();
+                                const num = parseFloat(numStr);
+                                if (isNaN(num)) {
+                                    isValid = false;
+                                    break;
+                                }
+                                product *= num;
+                            }
+
+                            if (isValid && parts.length > 1) {
+                                totalValue += product * 1000;
+                            }
+                        } else {
+                            const numStr = word.replace(/[.,]/g, "").trim();
+                            const num = parseFloat(numStr);
+                            if (!isNaN(num)) {
+                                totalValue += num * 1000;
+                            }
+                        }
+                    });
+                }
+
+                btn.setAttribute("data-total", totalValue.toLocaleString("en-US"));
+                grandTotal += totalValue;
+            });
+
+            const totalDisplay = document.querySelector("#total-section-value, .total");
+            if (totalDisplay) {
+                totalDisplay.textContent = `${grandTotal.toLocaleString("en-US")}`;
+            }
+        }
+
+        // --- Application Initialization ---
+        async function initApp() {
+            await initDB();
+            await renderUIFromDB();
+        }
+
+        initApp();
+
+        // --- Event Listeners ---
+        document.body.addEventListener("click", function (e) {
+            const btnCollapsible = e.target.closest(".btn-collapsible");
+            if (btnCollapsible) {
+                const parentCollapsible = btnCollapsible.closest(".collapsible");
+                if (parentCollapsible) {
+                    parentCollapsible.classList.toggle("active");
+
+                    const sections = Array.from(document.querySelectorAll(".collapsible"));
+                    const sectionIndex = sections.indexOf(parentCollapsible);
+                    if (sectionIndex !== -1) {
+                        saveSectionToDB(sectionIndex);
+                    }
+                }
+                return;
+            }
+
+            const btnAdd = e.target.closest("#btn-add-collapsible");
+            if (btnAdd) {
+                const rect = btnAdd.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const isThirtyPercentLeft = clickX <= (rect.width * 0.3);
+
+                if (isThirtyPercentLeft) {
+                    const backupInput = document.querySelector("#backup-collapsible");
+                    if (backupInput) {
+                        backupInput.classList.toggle("active");
+                        if (backupInput.classList.contains("active")) {
+                            backupInput.style.display = "block";
+                            updateBackupInputFromDB();
+                        } else {
+                            backupInput.style.display = "none";
+                        }
+                    }
+                    return;
+                }
+
+                const totalTarget = document.querySelector(".total, #total-section-value");
+                const count = document.querySelectorAll(".collapsible").length + 1;
+                const newSection = createCollapsibleSection(count);
+                bodyContainer.insertBefore(newSection, totalTarget);
+                updateSectionTotals();
+
+                saveSectionToDB(count - 1);
+                return;
+            }
+        });
+
+        // Event listener for changes to input#backup-collapsible
+        document.body.addEventListener("change", function (e) {
+            if (e.target.matches("#backup-collapsible")) {
+                applyBackupToDBAndUI(e.target.value);
+            }
+        });
+
+        document.body.addEventListener("keydown", function (e) {
+            const content = e.target.closest(".content");
+            if (!content) return;
+
+            if (e.key === "Enter") {
+                e.preventDefault();
+                return;
+            }
+
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            const targetP = selection.anchorNode.nodeType === Node.TEXT_NODE
+                ? selection.anchorNode.parentElement
+                : selection.anchorNode;
+
+            const paragraphs = Array.from(content.querySelectorAll("p"));
+            const pIndex = paragraphs.indexOf(targetP);
+
+            if (pIndex > 0) {
+                const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "Home", "End", "Space"];
+                if (!allowedKeys.includes(e.key) && !e.ctrlKey && !e.metaKey && !/^[0-9xX.,\s]$/.test(e.key)) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if (e.key === "Backspace" || e.key === "Delete") {
+                const range = selection.getRangeAt(0);
+
+                if (e.key === "Backspace" && range.startOffset === 0) {
+                    if (!selection.isCollapsed) {
+                        e.preventDefault();
+                        targetP.innerHTML = "<br>";
+                        updateSectionTotals();
+                    } else {
+                        e.preventDefault();
+                    }
+                }
+
+                if (e.key === "Delete" && range.endOffset === (targetP.textContent || "").length) {
+                    if (!selection.isCollapsed) {
+                        e.preventDefault();
+                        targetP.innerHTML = "<br>";
+                        updateSectionTotals();
+                    } else {
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+
+        document.body.addEventListener("input", function (e) {
+            const content = e.target.closest(".content");
+            if (!content) return;
+
+            const paragraphs = Array.from(content.querySelectorAll("p"));
+            paragraphs.forEach((p, index) => {
+                if (index > 0) {
+                    const cleaned = p.textContent.replace(/[^0-9xX.,\s]/g, "");
+                    if (p.textContent !== cleaned) {
+                        p.textContent = cleaned;
+                    }
+                }
+
+                if (p.textContent.trim() === "" && !p.querySelector("br")) {
+                    p.innerHTML = "<br>";
+                }
+            });
+
+            // Tự động thêm dòng mới nếu dòng cuối cùng có dữ liệu
+            const lastP = paragraphs[paragraphs.length - 1];
+            if (lastP && lastP.textContent.trim() !== "") {
+                const newP = document.createElement("p");
+                newP.appendChild(document.createElement("br"));
+                content.appendChild(newP);
+            }
+
+            updateSectionTotals();
+
+            const sections = Array.from(document.querySelectorAll(".collapsible"));
+            const currentSection = content.closest(".collapsible");
+            const sectionIndex = sections.indexOf(currentSection);
+
+            if (sectionIndex !== -1) {
+                saveSectionToDB(sectionIndex);
+            }
+        });
+    </script>
+</body>
+
+</html>
