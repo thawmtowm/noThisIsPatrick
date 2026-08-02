@@ -31,6 +31,60 @@
         <link rel="icon" type="image/png" sizes="32x32" href="icon/m-note-icon-32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="icon/m-note-icon-16.png">
         <style>
+            :root {
+                --bg-body: #f8fafc;
+                --text-color: #1e293b;
+                --border-color: #cbd5e1;
+                --btn-bg: #475569;
+                --btn-hover: #334155;
+                --btn-text: #ffffff;
+                --btn-add-bg: #0284c7;
+                --btn-add-hover: #0369a1;
+                --badge-bg: rgba(255, 255, 255, 0.2);
+                --content-bg: #ffffff;
+                --line-num-color: #94a3b8;
+                --total-bg: #e2e8f0;
+                --sup-color: #64748b;
+                --scrollbar-thumb: rgba(120, 120, 120, 0.7);
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg-body: #0f172a;
+                    --text-color: #f1f5f9;
+                    --border-color: #334155;
+                    --btn-bg: #1e293b;
+                    --btn-hover: #334155;
+                    --btn-text: #f8fafc;
+                    --btn-add-bg: #0284c7;
+                    --btn-add-hover: #0ea5e9;
+                    --badge-bg: rgba(255, 255, 255, 0.1);
+                    --content-bg: #233046;
+                    --line-num-color: #64748b;
+                    --total-bg: #334155;
+                    --sup-color: #94a3b8;
+                    --scrollbar-thumb: rgba(255, 255, 255, 0.3);
+                }
+            }
+
+            /* Manual override class: place on <html> or <body> */
+            body.dark-mode {
+                --bg-body: #0f172a;
+                --text-color: #f1f5f9;
+                --border-color: #334155;
+                --btn-bg: #1e293b;
+                --btn-hover: #334155;
+                --btn-text: #f8fafc;
+                --btn-add-bg: #0284c7;
+                --btn-add-hover: #0ea5e9;
+                --badge-bg: rgba(255, 255, 255, 0.1);
+                --content-bg: #233046;
+                --line-num-color: #64748b;
+                --total-bg: #334155;
+                --sup-color: #94a3b8;
+                --scrollbar-thumb: rgba(255, 255, 255, 0.3);
+            }
+
             * {
                 box-sizing: border-box;
             }
@@ -41,15 +95,15 @@
             }
 
             *::-webkit-scrollbar-thumb {
-                background: rgba(120, 120, 120, 0.7);
+                background: var(--scrollbar-thumb);
                 border-radius: 3px;
             }
 
             body {
                 font-family: system-ui, -apple-system, sans-serif;
                 margin: 1rem;
-                background-color: #f8fafc;
-                color: #1e293b;
+                background-color: var(--bg-body);
+                color: var(--text-color);
             }
 
             .container {
@@ -59,15 +113,15 @@
             }
 
             .collapsible {
-                margin-bottom: 0.05rem;
-                border: 1px solid #cbd5e1;
+                margin-bottom: 2px;
+                border: 1px solid var(--border-color);
                 border-radius: 4px;
                 overflow: hidden;
             }
 
             .btn-collapsible {
-                background-color: #475569;
-                color: white;
+                background-color: var(--btn-bg);
+                color: var(--btn-text);
                 cursor: pointer;
                 padding: 0.75em 1em;
                 width: 100%;
@@ -83,37 +137,46 @@
             }
 
             .btn-collapsible:hover {
-                background-color: #334155;
+                background-color: var(--btn-hover);
             }
 
-            /* Caret icon in ::before */
             .btn-collapsible::before {
                 content: "►";
                 display: inline-flex;
                 justify-content: center;
                 align-items: center;
                 width: 1.5em;
-                /* Same width as line number container */
                 margin-right: 0.5em;
                 font-size: 12px;
                 transition: transform 0.2s ease;
                 flex-shrink: 0;
             }
 
-            /* Caret rotation when parent .collapsible has .active */
             .collapsible.active .btn-collapsible::before {
                 transform: rotate(90deg);
             }
 
-            /* Display total value in ::after */
             .btn-collapsible::after {
                 content: attr(data-total);
                 margin-left: auto;
                 font-weight: bold;
                 font-size: 14px;
-                background-color: rgba(255, 255, 255, 0.2);
+                background-color: var(--badge-bg);
                 padding: 2px 8px;
                 border-radius: 12px;
+            }
+
+            .btn-collapsible .del-collapsible {
+                background-color: #ef4444;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: bold;
+                cursor: pointer;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
             }
 
             .content {
@@ -122,12 +185,11 @@
                 padding: 0.5em;
                 display: none;
                 overflow-y: auto;
-                background-color: #ffffff;
+                background-color: var(--content-bg);
                 counter-reset: line-num -7;
                 outline: none;
             }
 
-            /* Show content when parent div.collapsible contains .active */
             .collapsible.active .content {
                 display: block;
             }
@@ -135,7 +197,6 @@
             .content p {
                 margin: 0;
                 padding: 2px 0 2px 2em;
-                /* Adjusted padding to align text perfectly with button text */
                 position: relative;
                 min-height: 1.25em;
                 line-height: 1.25em;
@@ -144,7 +205,6 @@
                 word-break: break-word;
             }
 
-            /* Line number display in ::before */
             .content p::before {
                 content: counter(line-num);
                 position: absolute;
@@ -152,15 +212,13 @@
                 top: 50%;
                 transform: translateY(-50%);
                 width: 1.5em;
-                /* Same width as .btn-collapsible::before */
                 text-align: right;
-                color: #94a3b8;
+                color: var(--line-num-color);
                 font-size: 12px;
                 user-select: none;
                 -webkit-user-select: none;
             }
 
-            /* Hide line number for the first 7 paragraphs */
             .content p:nth-child(-n+7)::before {
                 content: "";
             }
@@ -169,7 +227,7 @@
                 display: block;
                 width: 100%;
                 padding: 0.75em;
-                background-color: #0284c7;
+                background-color: var(--btn-add-bg);
                 color: white;
                 border: none;
                 border-radius: 4px;
@@ -181,17 +239,24 @@
             }
 
             #btn-add-collapsible:hover {
-                background-color: #0369a1;
+                background-color: var(--btn-add-hover);
             }
 
             #total-section-value,
             .total {
                 font-size: 18px;
                 font-weight: bold;
-                padding: 1em;
-                background-color: #e2e8f0;
+                padding: 0.5em 1em;
+                background-color: var(--total-bg);
                 border-radius: 4px;
                 text-align: right;
+                user-select: none;
+                -webkit-user-select: none;
+            }
+
+            .total sup {
+                font-size: 0.67em;
+                color: var(--sup-color);
             }
 
             #backup-collapsible {
@@ -204,9 +269,9 @@
                 box-sizing: border-box;
                 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
                 font-size: 16px;
-                color: #1e293b;
-                background-color: #ffffff;
-                border: 1px solid #cbd5e1;
+                color: var(--text-color);
+                background-color: var(--content-bg);
+                border: 1px solid var(--border-color);
                 border-radius: 4px;
                 outline: none;
                 transition: border-color 0.2s, box-shadow 0.2s;
@@ -217,7 +282,7 @@
             }
 
             #backup-collapsible:focus {
-                border-color: #0284c7;
+                border-color: var(--btn-add-bg);
                 box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
             }
         </style>
@@ -225,7 +290,7 @@
 
 <body>
     <div class="container">
-        <div id="total-section-value" class="total">Total All Sections: 0</div>
+        <div id="total-section-value" class="total"></div>
         <button type="button" id="btn-add-collapsible">+</button>
         <textarea id="backup-collapsible" placeholder="JSON Backup"></textarea>
     </div>
@@ -320,6 +385,31 @@
             });
         }
 
+        async function syncAllToDB() {
+            if (!db) return;
+            const sections = document.querySelectorAll(".collapsible");
+            const tx = db.transaction(STORE_SECTIONS, "readwrite");
+            const store = tx.objectStore(STORE_SECTIONS);
+            store.clear();
+
+            sections.forEach((section, index) => {
+                const btn = section.querySelector(".btn-collapsible");
+                const content = section.querySelector(".content");
+                const paragraphs = Array.from(content.querySelectorAll("p"));
+
+                const data = {
+                    index: index,
+                    sectionName: btn.firstChild ? btn.firstChild.nodeValue.trim() : btn.textContent.trim(),
+                    "section-total": btn.getAttribute("data-total") || "0",
+                    "section-text": paragraphs.map(p => p.innerText.replace(/\n/g, "")),
+                    "is-activated": section.classList.contains("active")
+                };
+                store.put(data);
+            });
+
+            await updateBackupInputFromDB();
+        }
+
         async function updateBackupInputFromDB() {
             const backupInput = document.querySelector("#backup-collapsible");
             if (!backupInput || !db) return;
@@ -399,6 +489,13 @@
             btn.setAttribute("data-total", savedData ? savedData["section-total"] : "0");
             btn.textContent = defaultTitle;
 
+            const delBtn = document.createElement("div");
+            delBtn.className = "del-collapsible";
+            delBtn.style.display = "none";
+            delBtn.textContent = "DELETE";
+
+            btn.appendChild(delBtn);
+
             const content = document.createElement("div");
             content.className = "content";
             content.contentEditable = "true";
@@ -432,6 +529,7 @@
         function updateSectionTotals() {
             const sections = document.querySelectorAll(".collapsible");
             let grandTotal = 0;
+            let sumExceptLast = 0;
 
             sections.forEach((section, idx) => {
                 const btn = section.querySelector(".btn-collapsible");
@@ -445,6 +543,8 @@
 
                 if (btn.firstChild && btn.firstChild.nodeType === Node.TEXT_NODE) {
                     btn.firstChild.nodeValue = titleText;
+                } else if (btn.childNodes.length > 0) {
+                    btn.childNodes[0].nodeValue = titleText;
                 } else {
                     btn.textContent = titleText;
                 }
@@ -489,11 +589,21 @@
 
                 btn.setAttribute("data-total", totalValue.toLocaleString("en-US"));
                 grandTotal += totalValue;
+
+                if (idx < sections.length - 1) {
+                    sumExceptLast += totalValue;
+                }
             });
 
             const totalDisplay = document.querySelector("#total-section-value, .total");
             if (totalDisplay) {
-                totalDisplay.textContent = `${grandTotal.toLocaleString("en-US")}`;
+                const countExceptLast = Math.max(0, sections.length - 1);
+                const avgValue = countExceptLast > 0 ? (sumExceptLast / countExceptLast) : 0;
+
+                totalDisplay.innerHTML = `
+                    <a><sup>${countExceptLast} · ${avgValue.toLocaleString("en-US")}</sup></a><br>
+                    <a>${grandTotal.toLocaleString("en-US")}</a>
+                `;
             }
         }
 
@@ -505,10 +615,57 @@
 
         initApp();
 
+        // --- Helper to check click inside pseudo-element ::after ---
+        let preventToggle = false;
+
+        function isClickOnAfter(e, btn) {
+            const rect = btn.getBoundingClientRect();
+            const afterStyle = window.getComputedStyle(btn, "::after");
+
+            const afterWidth = parseFloat(afterStyle.width) || 24; // Mặc định kích thước nếu chưa lấy được
+            const afterHeight = parseFloat(afterStyle.height) || rect.height;
+
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // Kiểm tra nếu vị trí bấm nằm ở khu vực ::after (thường nằm ở góc phải nút)
+            const isRightEdge = clickX >= (rect.width - afterWidth - 10);
+            return isRightEdge;
+        }
+
         // --- Event Listeners ---
-        document.body.addEventListener("click", function (e) {
+        document.body.addEventListener("dblclick", function (e) {
+            const btnCollapsible = e.target.closest(".btn-collapsible");
+            if (btnCollapsible && isClickOnAfter(e, btnCollapsible)) {
+                preventToggle = true;
+                setTimeout(() => { preventToggle = false; }, 300);
+
+                const delBtn = btnCollapsible.querySelector(".del-collapsible");
+                if (delBtn) {
+                    delBtn.style.display = delBtn.style.display === "none" ? "block" : "none";
+                }
+            }
+        });
+
+        document.body.addEventListener("click", async function (e) {
+            const delBtn = e.target.closest("div.del-collapsible");
+            if (delBtn) {
+                const parentCollapsible = delBtn.closest(".collapsible");
+                if (parentCollapsible) {
+                    parentCollapsible.remove();
+                    updateSectionTotals();
+                    await syncAllToDB();
+                }
+                return;
+            }
+
             const btnCollapsible = e.target.closest(".btn-collapsible");
             if (btnCollapsible) {
+                // Chặn toggle khi vừa dblclick hoặc click đúng vào khu vực ::after
+                if (preventToggle || isClickOnAfter(e, btnCollapsible)) {
+                    return;
+                }
+
                 const parentCollapsible = btnCollapsible.closest(".collapsible");
                 if (parentCollapsible) {
                     parentCollapsible.classList.toggle("active");
