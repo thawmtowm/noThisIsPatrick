@@ -285,6 +285,8 @@
                 border-color: var(--btn-add-bg);
                 box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
             }
+
+
         </style>
     </head>
 
@@ -690,10 +692,14 @@
                     if (backupInput) {
                         backupInput.classList.toggle("active");
                         if (backupInput.classList.contains("active")) {
-                            backupInput.style.display = "block";
                             updateBackupInputFromDB();
+                            backupInput.scrollIntoView({ behavior: "smooth", block: "center" });
                         } else {
-                            backupInput.style.display = "none";
+                            const collapsibles = document.querySelectorAll(".collapsible.active");
+                            const lastCollapsible = collapsibles[collapsibles.length - 1];
+                            if (lastCollapsible) {
+                                lastCollapsible.scrollIntoView({ behavior: "smooth", block: "center" });
+                            }
                         }
                     }
                     return;
