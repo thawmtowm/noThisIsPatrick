@@ -3,72 +3,58 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=contain, minimal-ui">
+    <title>M Note</title>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport"
-            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
-        <title>M Note</title>
+    <!-- Generic Web App & Theme -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="manifest" href="icon/m-note-manifest.json">
 
-        <!-- Generic Web App & Theme -->
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="theme-color" content="#ffffff">
-        <link rel="manifest" href="icon/m-note-manifest.json">
+    <!-- Apple / iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="M Note">
+    <link rel="apple-touch-icon" href="icon/m-note-icon-192.png">
 
-        <!-- Apple / iOS Support -->
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="apple-mobile-web-app-title" content="M Note">
-        <link rel="apple-touch-icon" href="icon/m-note-icon-192.png">
+    <!-- Windows / Microsoft Support -->
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="icon/m-note-icon-192.png">
+    <meta name="msapplication-tap-highlight" content="no">
 
-        <!-- Windows / Microsoft Support -->
-        <meta name="msapplication-TileColor" content="#ffffff">
-        <meta name="msapplication-TileImage" content="icon/m-note-icon-192.png">
-        <meta name="msapplication-tap-highlight" content="no">
+    <!-- Standard Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/m-note-icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/m-note-icon-16.png">
 
-        <!-- Standard Favicon -->
-        <link rel="icon" type="image/png" sizes="32x32" href="icon/m-note-icon-32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="icon/m-note-icon-16.png">
-        <style>
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --text-color: #1e293b;
+            --border-color: #cbd5e1;
+            --btn-bg: #475569;
+            --btn-hover: #334155;
+            --btn-text: #ffffff;
+            --btn-add-bg: #0284c7;
+            --btn-add-hover: #0369a1;
+            --badge-bg: rgba(255, 255, 255, 0.2);
+            --content-bg: #ffffff;
+            --line-num-color: #94a3b8;
+            --total-bg: #e2e8f0;
+            --sup-color: #64748b;
+            --scrollbar-thumb: rgba(120, 120, 120, 0.7);
+
+            /* Theme Status Colors */
+            --status-success-bg: #22c55e;
+            --status-success-text: #ffffff;
+            --status-warning-bg: #eab308;
+            --status-warning-text: #0f172a;
+            --status-danger-bg: #ef4444;
+            --status-danger-text: #ffffff;
+        }
+
+        @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #f8fafc;
-                --text-color: #1e293b;
-                --border-color: #cbd5e1;
-                --btn-bg: #475569;
-                --btn-hover: #334155;
-                --btn-text: #ffffff;
-                --btn-add-bg: #0284c7;
-                --btn-add-hover: #0369a1;
-                --badge-bg: rgba(255, 255, 255, 0.2);
-                --content-bg: #ffffff;
-                --line-num-color: #94a3b8;
-                --total-bg: #e2e8f0;
-                --sup-color: #64748b;
-                --scrollbar-thumb: rgba(120, 120, 120, 0.7);
-            }
-
-            @media (prefers-color-scheme: dark) {
-                :root {
-                    --bg-body: #0f172a;
-                    --text-color: #f1f5f9;
-                    --border-color: #334155;
-                    --btn-bg: #1e293b;
-                    --btn-hover: #334155;
-                    --btn-text: #f8fafc;
-                    --btn-add-bg: #0284c7;
-                    --btn-add-hover: #0ea5e9;
-                    --badge-bg: rgba(255, 255, 255, 0.1);
-                    --content-bg: #233046;
-                    --line-num-color: #64748b;
-                    --total-bg: #334155;
-                    --sup-color: #94a3b8;
-                    --scrollbar-thumb: rgba(255, 255, 255, 0.3);
-                }
-            }
-
-            /* Manual override class: place on <html> or <body> */
-            body.dark-mode {
                 --bg-body: #0f172a;
                 --text-color: #f1f5f9;
                 --border-color: #334155;
@@ -83,228 +69,387 @@
                 --total-bg: #334155;
                 --sup-color: #94a3b8;
                 --scrollbar-thumb: rgba(255, 255, 255, 0.3);
+
+                --status-success-bg: #15803d;
+                --status-success-text: #f8fafc;
+                --status-warning-bg: #ca8a04;
+                --status-warning-text: #f8fafc;
+                --status-danger-bg: #b91c1c;
+                --status-danger-text: #f8fafc;
             }
+        }
 
-            * {
-                box-sizing: border-box;
-            }
+        /* Manual override class */
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --text-color: #f1f5f9;
+            --border-color: #334155;
+            --btn-bg: #1e293b;
+            --btn-hover: #334155;
+            --btn-text: #f8fafc;
+            --btn-add-bg: #0284c7;
+            --btn-add-hover: #0ea5e9;
+            --badge-bg: rgba(255, 255, 255, 0.1);
+            --content-bg: #233046;
+            --line-num-color: #64748b;
+            --total-bg: #334155;
+            --sup-color: #94a3b8;
+            --scrollbar-thumb: rgba(255, 255, 255, 0.3);
 
-            *::-webkit-scrollbar {
-                width: 3px;
-                height: 3px;
-            }
+            --status-success-bg: #15803d;
+            --status-success-text: #f8fafc;
+            --status-warning-bg: #ca8a04;
+            --status-warning-text: #f8fafc;
+            --status-danger-bg: #b91c1c;
+            --status-danger-text: #f8fafc;
+        }
 
-            *::-webkit-scrollbar-thumb {
-                background: var(--scrollbar-thumb);
-                border-radius: 3px;
-            }
+        * {
+            box-sizing: border-box;
+        }
 
-            body {
-                font-family: system-ui, -apple-system, sans-serif;
-                margin: 1rem;
-                background-color: var(--bg-body);
-                color: var(--text-color);
-            }
+        *::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
 
-            .container {
-                width: 100%;
-                max-width: 700px;
-                margin: 0 auto;
-            }
+        *::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 3px;
+        }
 
-            .collapsible {
-                margin-bottom: 2px;
-                border: 1px solid var(--border-color);
-                border-radius: 4px;
-                overflow: hidden;
-            }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0 1rem;
+            background-color: var(--bg-body);
+            color: var(--text-color);
+        }
 
-            .btn-collapsible {
-                background-color: var(--btn-bg);
-                color: var(--btn-text);
-                cursor: pointer;
-                padding: 0.75em 1em;
-                width: 100%;
-                border: none;
-                text-align: left;
-                outline: none;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                user-select: none;
-                -webkit-user-select: none;
-            }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+        }
 
-            .btn-collapsible:hover {
-                background-color: var(--btn-hover);
-            }
+        /* Weekly Layout */
+        /* Sticky Weekly Header */
+        #weekly {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--bg-body);
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
 
-            .btn-collapsible::before {
-                content: "►";
-                display: inline-flex;
-                justify-content: center;
-                align-items: center;
-                width: 1.5em;
-                margin-right: 0.5em;
-                font-size: 12px;
-                transition: transform 0.2s ease;
-                flex-shrink: 0;
-            }
+        .weekly-row {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
 
-            .collapsible.active .btn-collapsible::before {
-                transform: rotate(90deg);
-            }
+        .weekly-col {
+            flex: 1;
+            position: relative;
+            padding: 0.5em;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
 
-            .btn-collapsible::after {
-                content: attr(data-total);
-                margin-left: auto;
-                font-weight: bold;
-                font-size: 14px;
-                background-color: var(--badge-bg);
-                padding: 2px 8px;
-                border-radius: 12px;
-            }
+        .weekly-col::after {
+            content: attr(data-days);
+            position: absolute;
+            bottom: 2px;
+            right: 6px;
+            font-size: 11px;
+            font-weight: normal;
+            opacity: 0.85;
+        }
 
-            .btn-collapsible .del-collapsible {
-                background-color: #ef4444;
-                color: white;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: bold;
-                cursor: pointer;
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-            }
+        .weekly-col.state-success {
+            background-color: var(--status-success-bg);
+            color: var(--status-success-text);
+        }
 
-            .content {
-                min-height: 200px;
-                max-height: 500px;
-                padding: 0.5em;
-                display: none;
-                overflow-y: auto;
-                background-color: var(--content-bg);
-                counter-reset: line-num -7;
-                outline: none;
-            }
+        .weekly-col.state-warning {
+            background-color: var(--status-warning-bg);
+            color: var(--status-warning-text);
+        }
 
-            .collapsible.active .content {
-                display: block;
-            }
+        .weekly-col.state-danger {
+            background-color: var(--status-danger-bg);
+            color: var(--status-danger-text);
+        }
 
-            .content p {
-                margin: 0;
-                padding: 2px 0 2px 2em;
-                position: relative;
-                min-height: 1.25em;
-                line-height: 1.25em;
-                counter-increment: line-num;
-                outline: none;
-                word-break: break-word;
-            }
+        .weekly-btn-reset {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 5;
+        }
 
-            .content p::before {
-                content: counter(line-num);
-                position: absolute;
-                left: 0;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 1.5em;
-                text-align: right;
-                color: var(--line-num-color);
-                font-size: 12px;
-                user-select: none;
-                -webkit-user-select: none;
-            }
+        .weekly-btn-reset.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-            .content p:nth-child(-n+7)::before {
-                content: "";
-            }
+        /* Daily Section */
+        #daily {
+            width: 100%;
+        }
 
-            #btn-add-collapsible {
-                display: block;
-                width: 100%;
-                padding: 0.75em;
-                background-color: var(--btn-add-bg);
-                color: white;
-                border: none;
-                border-radius: 4px;
-                font-size: 18px;
-                font-weight: bold;
-                cursor: pointer;
-                margin-top: 1rem;
-                margin-bottom: 1rem;
-            }
-
-            #btn-add-collapsible:hover {
-                background-color: var(--btn-add-hover);
-            }
-
-            #total-section-value,
-            .total {
-                font-size: 18px;
-                font-weight: bold;
-                padding: 0.5em 1em;
-                background-color: var(--total-bg);
-                border-radius: 4px;
-                text-align: right;
-                user-select: none;
-                -webkit-user-select: none;
-            }
-
-            .total sup {
-                font-size: 0.67em;
-                color: var(--sup-color);
-            }
-
-            #backup-collapsible {
-                display: none;
-                width: 100%;
-                height: 500px;
-                resize: none;
-                margin-top: 10px;
-                padding: 0.5em;
-                box-sizing: border-box;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-                font-size: 16px;
-                color: var(--text-color);
-                background-color: var(--content-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 4px;
-                outline: none;
-                transition: border-color 0.2s, box-shadow 0.2s;
-            }
-
-            #backup-collapsible.active {
-                display: block;
-            }
-
-            #backup-collapsible:focus {
-                border-color: var(--btn-add-bg);
-                box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
-            }
+        .collapsible {
+            margin-bottom: 2px;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            overflow: visible;
+        }
 
 
-        </style>
-    </head>
+
+        /* Sticky Collapsible Button right below #weekly */
+        .btn-collapsible {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            cursor: pointer;
+            padding: 0.75em 1em;
+            width: 100%;
+            text-align: left;
+            outline: none;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            -webkit-user-select: none;
+            user-select: none;
+            position: sticky;
+            top: 5.85rem;
+            /* Chiều cao khớp phía dưới #weekly */
+            z-index: 10;
+        }
+
+        .btn-collapsible:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .btn-collapsible::before {
+            content: "►";
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 1.5em;
+            margin-right: 0.5em;
+            font-size: 12px;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .collapsible.active .btn-collapsible::before {
+            transform: rotate(90deg);
+        }
+
+        .btn-collapsible::after {
+            content: attr(data-total);
+            margin-left: auto;
+            font-weight: bold;
+            font-size: 14px;
+            background-color: var(--badge-bg);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .btn-collapsible .del-collapsible {
+            background-color: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .content {
+            height: 55vh;
+            padding: 0.5em;
+            display: none;
+            overflow-y: auto;
+            background-color: var(--content-bg);
+            counter-reset: line-num -7;
+            outline: none;
+        }
+
+        .collapsible.active .content {
+            display: block;
+        }
+
+        .content p {
+            margin: 0;
+            padding: 2px 0 2px 2em;
+            position: relative;
+            min-height: 1.25em;
+            line-height: 1.25em;
+            counter-increment: line-num;
+            outline: none;
+            word-break: break-word;
+        }
+
+        .content p::before {
+            content: counter(line-num);
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.5em;
+            text-align: right;
+            color: var(--line-num-color);
+            font-size: 12px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .content p:nth-child(-n+7)::before {
+            content: "";
+        }
+
+        #btn-add-collapsible {
+            display: block;
+            width: 100%;
+            padding: 0.75em;
+            background-color: var(--btn-add-bg);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #btn-add-collapsible:hover {
+            background-color: var(--btn-add-hover);
+        }
+
+        #total-section-value,
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 0.5em 1em;
+            background-color: var(--total-bg);
+            border-radius: 4px;
+            text-align: right;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .total sup {
+            font-size: 0.67em;
+            color: var(--sup-color);
+        }
+
+        #backup-collapsible {
+            display: none;
+            width: 100%;
+            height: 55vh;
+            resize: none;
+            margin-top: 10px;
+            padding: 0.5em;
+            box-sizing: border-box;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 16px;
+            color: var(--text-color);
+            background-color: var(--content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #backup-collapsible.active {
+            display: block;
+        }
+
+        #backup-collapsible:focus {
+            border-color: var(--btn-add-bg);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+    </style>
+</head>
 
 <body>
     <div class="container">
-        <div id="total-section-value" class="total"></div>
-        <button type="button" id="btn-add-collapsible">+</button>
-        <textarea id="backup-collapsible" placeholder="JSON Backup"></textarea>
+        <div id="weekly">
+            <div class="weekly-row">
+                <div class="weekly-col" id="col-TRIM" data-key="TRIM">TRIM <button
+                        class="weekly-btn-reset">RESET</button></div>
+                <div class="weekly-col" id="col-CIP_T" data-key="CIP_T">CIP-T <button
+                        class="weekly-btn-reset">RESET</button></div>
+                <div class="weekly-col" id="col-CIP_D" data-key="CIP_D">CIP-D <button
+                        class="weekly-btn-reset">RESET</button></div>
+            </div>
+            <div class="weekly-row">
+                <div class="weekly-col" id="col-BTH" data-key="BTH">BTH</div>
+                <div class="weekly-col" id="col-EXE" data-key="EXE">EXE</div>
+            </div>
+        </div>
+        <div id="daily">
+            <div id="total-section-value" class="total"></div>
+            <button type="button" id="btn-add-collapsible">+</button>
+            <textarea id="backup-collapsible" placeholder="JSON Backup"></textarea>
+        </div>
     </div>
 
     <script>
-        const bodyContainer = document.querySelector(".container");
+        const dailyContainer = document.querySelector("#daily");
         const DB_NAME = "AppDatabase";
         const DB_VERSION = 1;
         const STORE_SECTIONS = "sections";
         const STORE_APP_STATE = "appState";
 
         let db = null;
+
+        // --- Date Helpers ---
+        function getStartOfWeekSunday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            d.setDate(d.getDate() - day);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function getDaysDiff(fromDateISO) {
+            const from = new Date(fromDateISO);
+            from.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = today - from;
+            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
 
         // --- IndexedDB Setup ---
         function initDB() {
@@ -321,15 +466,61 @@
                     }
                 };
 
-                request.onsuccess = (e) => {
+                request.onsuccess = async (e) => {
                     db = e.target.result;
+                    await setupWeeklyDefaultKeys();
                     resolve(db);
                 };
 
-                request.onerror = (e) => {
-                    reject(e.target.error);
-                };
+                request.onerror = (e) => reject(e.target.error);
             });
+        }
+
+        function getStateFromDB(key) {
+            return new Promise((resolve) => {
+                if (!db) return resolve(null);
+                const tx = db.transaction(STORE_APP_STATE, "readonly");
+                const req = tx.objectStore(STORE_APP_STATE).get(key);
+                req.onsuccess = () => resolve(req.result ? req.result.value : null);
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        function saveStateToDB(key, value) {
+            if (!db) return;
+            const tx = db.transaction(STORE_APP_STATE, "readwrite");
+            tx.objectStore(STORE_APP_STATE).put({ key: key, value: value });
+        }
+
+        function getAllAppStateFromDB() {
+            return new Promise((resolve) => {
+                if (!db) return resolve([]);
+                const tx = db.transaction(STORE_APP_STATE, "readonly");
+                const req = tx.objectStore(STORE_APP_STATE).getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        async function setupWeeklyDefaultKeys() {
+            const today = new Date();
+            const sunday = getStartOfWeekSunday(today);
+
+            const defaults = [
+                { key: "PATIENT_ZERO_TRIM", value: sunday.toISOString() },
+                { key: "PATIENT_ZERO_TRIM_RESET", value: true },
+                { key: "PATIENT_ZERO_CIP_T", value: today.toISOString() },
+                { key: "PATIENT_ZERO_CIP_T_RESET", value: true },
+                { key: "PATIENT_ZERO_CIP_D", value: today.toISOString() },
+                { key: "PATIENT_ZERO_CIP_D_RESET", value: true }
+            ];
+
+            for (const item of defaults) {
+                const existing = await getStateFromDB(item.key);
+                if (existing === null || existing === undefined) {
+                    saveStateToDB(item.key, item.value);
+                }
+            }
         }
 
         function saveSectionToDB(sectionIndex) {
@@ -351,38 +542,38 @@
                 "is-activated": section.classList.contains("active")
             };
 
-            const tx = db.transaction(STORE_SECTIONS, "readwrite");
+            const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE], "readwrite");
+
+            // Save to STORE_SECTIONS
             tx.objectStore(STORE_SECTIONS).put(data);
 
-            saveStateToDB("currentEditing", sectionIndex);
-        }
-
-        function saveStateToDB(key, value) {
-            if (!db) return;
-            const tx = db.transaction(STORE_APP_STATE, "readwrite");
-            tx.objectStore(STORE_APP_STATE).put({ key: key, value: value });
+            // Save state indicators to STORE_APP_STATE
+            tx.objectStore(STORE_APP_STATE).put({ key: "currentEditing", value: sectionIndex });
+            tx.objectStore(STORE_APP_STATE).put({ key: `section_${sectionIndex}_total`, value: data["section-total"] });
         }
 
         function loadAllDataFromDB() {
             return new Promise((resolve) => {
-                if (!db) return resolve({ sections: [], currentEditing: null });
+                if (!db) return resolve({ sections: [], currentEditing: null, appState: [] });
 
                 const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE], "readonly");
                 const sectionsStore = tx.objectStore(STORE_SECTIONS);
                 const stateStore = tx.objectStore(STORE_APP_STATE);
 
                 const sectionsReq = sectionsStore.getAll();
+                const appStateReq = stateStore.getAll();
                 const editingReq = stateStore.get("currentEditing");
 
                 tx.oncomplete = () => {
                     resolve({
                         sections: sectionsReq.result || [],
+                        appState: appStateReq.result || [],
                         currentEditing: editingReq.result ? editingReq.result.value : null
                     });
                 };
 
                 tx.onerror = () => {
-                    resolve({ sections: [], currentEditing: null });
+                    resolve({ sections: [], appState: [], currentEditing: null });
                 };
             });
         }
@@ -390,8 +581,10 @@
         async function syncAllToDB() {
             if (!db) return;
             const sections = document.querySelectorAll(".collapsible");
-            const tx = db.transaction(STORE_SECTIONS, "readwrite");
+            const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE], "readwrite");
             const store = tx.objectStore(STORE_SECTIONS);
+            const stateStore = tx.objectStore(STORE_APP_STATE);
+
             store.clear();
 
             sections.forEach((section, index) => {
@@ -407,6 +600,7 @@
                     "is-activated": section.classList.contains("active")
                 };
                 store.put(data);
+                stateStore.put({ key: `section_${index}_total`, value: data["section-total"] });
             });
 
             await updateBackupInputFromDB();
@@ -416,31 +610,118 @@
             const backupInput = document.querySelector("#backup-collapsible");
             if (!backupInput || !db) return;
 
-            const { sections } = await loadAllDataFromDB();
+            const { sections, appState } = await loadAllDataFromDB();
             sections.sort((a, b) => a.index - b.index);
-            backupInput.value = JSON.stringify(sections);
+
+            const combinedBackup = {
+                appState: appState,
+                sections: sections
+            };
+
+            backupInput.value = JSON.stringify(combinedBackup, null, 2);
         }
 
         function applyBackupToDBAndUI(jsonString) {
             if (!db) return;
 
             try {
-                const sectionsData = JSON.parse(jsonString);
-                if (!Array.isArray(sectionsData)) return;
+                const backupData = JSON.parse(jsonString);
 
-                const tx = db.transaction(STORE_SECTIONS, "readwrite");
-                const store = tx.objectStore(STORE_SECTIONS);
-                store.clear();
+                let sectionsData = [];
+                let appStateData = [];
 
-                sectionsData.forEach(item => {
-                    store.put(item);
-                });
+                if (Array.isArray(backupData)) {
+                    // Backward compatibility: If array, treat as sections only
+                    sectionsData = backupData;
+                } else if (typeof backupData === "object" && backupData !== null) {
+                    sectionsData = backupData.sections || [];
+                    appStateData = backupData.appState || [];
+                }
+
+                const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE], "readwrite");
+                const sectionsStore = tx.objectStore(STORE_SECTIONS);
+                const stateStore = tx.objectStore(STORE_APP_STATE);
+
+                sectionsStore.clear();
+                sectionsData.forEach(item => sectionsStore.put(item));
+
+                if (appStateData.length > 0) {
+                    stateStore.clear();
+                    appStateData.forEach(item => stateStore.put(item));
+                }
 
                 tx.oncomplete = () => {
+                    renderWeeklyUI();
                     renderUIFromDB();
                 };
             } catch (err) {
                 console.error("Invalid JSON input for backup data", err);
+            }
+        }
+
+        // --- Weekly UI Rendering ---
+        async function renderWeeklyUI() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+
+            const trackingCols = [
+                { key: "TRIM", warnDays: 26, dangerDays: 28 },
+                { key: "CIP_T", warnDays: 19, dangerDays: 20 },
+                { key: "CIP_D", warnDays: 9, dangerDays: 10 }
+            ];
+
+            for (const col of trackingCols) {
+                const elem = document.querySelector(`#col-${col.key}`);
+                if (!elem) continue;
+
+                let zeroDate = await getStateFromDB(`PATIENT_ZERO_${col.key}`);
+                let resetState = await getStateFromDB(`PATIENT_ZERO_${col.key}_RESET`);
+
+                let diff = getDaysDiff(zeroDate);
+
+                if (diff >= col.dangerDays) {
+                    zeroDate = new Date().toISOString();
+                    resetState = false;
+                    saveStateToDB(`PATIENT_ZERO_${col.key}`, zeroDate);
+                    saveStateToDB(`PATIENT_ZERO_${col.key}_RESET`, false);
+                    diff = 0;
+                } else if (diff >= col.warnDays && resetState) {
+                    resetState = false;
+                    saveStateToDB(`PATIENT_ZERO_${col.key}_RESET`, false);
+                }
+
+                elem.setAttribute("data-days", diff);
+                elem.classList.remove("state-success", "state-warning", "state-danger");
+
+                if (diff < col.warnDays && resetState) {
+                    elem.classList.add("state-success");
+                } else if (diff >= col.dangerDays || !resetState) {
+                    if (diff >= col.warnDays && diff < col.dangerDays) {
+                        elem.classList.add("state-warning");
+                    } else {
+                        elem.classList.add("state-danger");
+                    }
+                }
+            }
+
+            const bthElem = document.querySelector("#col-BTH");
+            if (bthElem) {
+                bthElem.classList.remove("state-success", "state-warning");
+                if (dayOfWeek === 2 || dayOfWeek === 6) {
+                    bthElem.classList.add("state-warning");
+                } else {
+                    bthElem.classList.add("state-success");
+                }
+            }
+
+            const exeElem = document.querySelector("#col-EXE");
+            if (exeElem) {
+                exeElem.classList.remove("state-success", "state-warning");
+                if (dayOfWeek === 4 || dayOfWeek === 0) {
+                    exeElem.classList.add("state-warning");
+                } else {
+                    exeElem.classList.add("state-success");
+                }
             }
         }
 
@@ -455,12 +736,12 @@
                 savedSections.sort((a, b) => a.index - b.index);
                 savedSections.forEach(data => {
                     const section = createCollapsibleSection(data.index + 1, data);
-                    bodyContainer.insertBefore(section, totalElem);
+                    dailyContainer.insertBefore(section, totalElem);
                 });
             } else {
                 for (let i = 1; i <= 3; i++) {
                     const section = createCollapsibleSection(i);
-                    bodyContainer.insertBefore(section, totalElem);
+                    dailyContainer.insertBefore(section, totalElem);
                 }
             }
 
@@ -475,7 +756,7 @@
             }
         }
 
-        // --- Core Functions ---
+        // --- Core Section Functions ---
         function createCollapsibleSection(index, savedData = null) {
             const container = document.createElement("div");
             container.className = "collapsible";
@@ -589,7 +870,8 @@
                     });
                 }
 
-                btn.setAttribute("data-total", totalValue.toLocaleString("en-US"));
+                const formattedTotal = totalValue.toLocaleString("en-US");
+                btn.setAttribute("data-total", formattedTotal);
                 grandTotal += totalValue;
 
                 if (idx < sections.length - 1) {
@@ -597,45 +879,71 @@
                 }
             });
 
+            const countExceptLast = Math.max(0, sections.length - 1);
+            const avgValue = countExceptLast > 0 ? (sumExceptLast / countExceptLast) : 0;
+
             const totalDisplay = document.querySelector("#total-section-value, .total");
             if (totalDisplay) {
-                const countExceptLast = Math.max(0, sections.length - 1);
-                const avgValue = countExceptLast > 0 ? (sumExceptLast / countExceptLast) : 0;
-
                 totalDisplay.innerHTML = `
                     <a><sup>${countExceptLast} · ${avgValue.toLocaleString("en-US")}</sup></a><br>
                     <a>${grandTotal.toLocaleString("en-US")}</a>
                 `;
             }
+
+            // Save aggregate metrics into STORE_APP_STATE
+            saveStateToDB("grandTotal", grandTotal);
+            saveStateToDB("averageValue", avgValue);
+            saveStateToDB("lastUpdated", new Date().toISOString());
         }
 
         // --- Application Initialization ---
         async function initApp() {
             await initDB();
+            await renderWeeklyUI();
             await renderUIFromDB();
         }
 
         initApp();
 
-        // --- Helper to check click inside pseudo-element ::after ---
+        // --- Click Checking Helper ---
         let preventToggle = false;
 
         function isClickOnAfter(e, btn) {
             const rect = btn.getBoundingClientRect();
             const afterStyle = window.getComputedStyle(btn, "::after");
 
-            const afterWidth = parseFloat(afterStyle.width) || 24; // Mặc định kích thước nếu chưa lấy được
-            const afterHeight = parseFloat(afterStyle.height) || rect.height;
-
+            const afterWidth = parseFloat(afterStyle.width) || 24;
             const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
 
-            // Kiểm tra nếu vị trí bấm nằm ở khu vực ::after (thường nằm ở góc phải nút)
-            const isRightEdge = clickX >= (rect.width - afterWidth - 10);
-            return isRightEdge;
+            return clickX >= (rect.width - afterWidth - 10);
         }
 
         // --- Event Listeners ---
+        document.querySelector("#weekly").addEventListener("dblclick", function (e) {
+            const col = e.target.closest(".weekly-col");
+            if (!col) return;
+
+            const key = col.getAttribute("data-key");
+            if (["TRIM", "CIP_T", "CIP_D"].includes(key)) {
+                const resetBtn = col.querySelector(".weekly-btn-reset");
+                if (resetBtn) {
+                    resetBtn.classList.toggle("active");
+                }
+            }
+        });
+
+        document.querySelector("#weekly").addEventListener("click", async function (e) {
+            const resetBtn = e.target.closest(".weekly-btn-reset");
+            if (resetBtn) {
+                const col = resetBtn.closest(".weekly-col");
+                const key = col.getAttribute("data-key");
+
+                saveStateToDB(`PATIENT_ZERO_${key}_RESET`, true);
+                resetBtn.classList.remove("active");
+                await renderWeeklyUI();
+            }
+        });
+
         document.body.addEventListener("dblclick", function (e) {
             const btnCollapsible = e.target.closest(".btn-collapsible");
             if (btnCollapsible && isClickOnAfter(e, btnCollapsible)) {
@@ -663,7 +971,6 @@
 
             const btnCollapsible = e.target.closest(".btn-collapsible");
             if (btnCollapsible) {
-                // Chặn toggle khi vừa dblclick hoặc click đúng vào khu vực ::after
                 if (preventToggle || isClickOnAfter(e, btnCollapsible)) {
                     return;
                 }
@@ -692,7 +999,7 @@
                     if (backupInput) {
                         backupInput.classList.toggle("active");
                         if (backupInput.classList.contains("active")) {
-                            updateBackupInputFromDB();
+                            await updateBackupInputFromDB();
                             backupInput.scrollIntoView({ behavior: "smooth", block: "center" });
                         } else {
                             const collapsibles = document.querySelectorAll(".collapsible.active");
@@ -708,7 +1015,7 @@
                 const totalTarget = document.querySelector(".total, #total-section-value");
                 const count = document.querySelectorAll(".collapsible").length + 1;
                 const newSection = createCollapsibleSection(count);
-                bodyContainer.insertBefore(newSection, totalTarget);
+                dailyContainer.insertBefore(newSection, totalTarget);
                 updateSectionTotals();
 
                 saveSectionToDB(count - 1);
@@ -716,7 +1023,6 @@
             }
         });
 
-        // Event listener for changes to input#backup-collapsible
         document.body.addEventListener("change", function (e) {
             if (e.target.matches("#backup-collapsible")) {
                 applyBackupToDBAndUI(e.target.value);
@@ -793,7 +1099,6 @@
                 }
             });
 
-            // Tự động thêm dòng mới nếu dòng cuối cùng có dữ liệu
             const lastP = paragraphs[paragraphs.length - 1];
             if (lastP && lastP.textContent.trim() !== "") {
                 const newP = document.createElement("p");
