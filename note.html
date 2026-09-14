@@ -407,18 +407,8 @@
 <body>
     <div class="container">
         <div id="weekly">
-            <div class="weekly-row">
-                <div class="weekly-col" id="col-TRIM" data-key="TRIM">TRIM <button
-                        class="weekly-btn-reset">RESET</button></div>
-                <div class="weekly-col" id="col-CIP_T" data-key="CIP_T">CIP-T <button
-                        class="weekly-btn-reset">RESET</button></div>
-                <div class="weekly-col" id="col-CIP_D" data-key="CIP_D">CIP-D <button
-                        class="weekly-btn-reset">RESET</button></div>
-            </div>
-            <div class="weekly-row">
-                <div class="weekly-col" id="col-BTH" data-key="BTH">BTH</div>
-                <div class="weekly-col" id="col-EXE" data-key="EXE">EXE</div>
-            </div>
+            <div class="weekly-row"></div>
+            <div class="weekly-row"></div>
         </div>
         <div id="daily">
             <div id="total-section-value" class="total"></div>
@@ -430,11 +420,27 @@
     <script>
         const dailyContainer = document.querySelector("#daily");
         const DB_NAME = "AppDatabase";
-        const DB_VERSION = 1;
-        const STORE_SECTIONS = "sections";
-        const STORE_APP_STATE = "appState";
+        const DB_VERSION = 5; // Incremented version for schema consistency
+        const STORE_SECTIONS = "ForAfricaTable";
+        const STORE_APP_STATE = "AppState";
+        const FIRST_ROWTINE_TABLE = "FirstRowtineTable";
+        const SECOND_ROWTINE_TABLE = "SecondRowtineTable";
 
         let db = null;
+
+        // Default configurations
+        const FirstRowtineDefaults = [
+            { index: 0, key: "A_TRI", warnDays: 26, dangerDays: 28, value: new Date().toISOString(), isReset: true },
+            { index: 1, key: "H_TRI", warnDays: 26, dangerDays: 28, value: new Date().toISOString(), isReset: true },
+            { index: 2, key: "T_CU", warnDays: 26, dangerDays: 27, value: new Date().toISOString(), isReset: true },
+            { index: 3, key: "D_CU", warnDays: 8, dangerDays: 9, value: new Date().toISOString(), isReset: true }
+        ];
+
+        const SecondRowtineDefaults = [
+            { index: 0, key: "EXE", warnDays: [0, 4] },
+            { index: 1, key: "BUT", warnDays: [2, 6] },
+            { index: 2, key: "SHAKE", warnDays: [0, 2, 4] }
+        ];
 
         // --- Date Helpers ---
         function getStartOfWeekSunday(date) {
@@ -467,6 +473,12 @@
                     if (!database.objectStoreNames.contains(STORE_APP_STATE)) {
                         database.createObjectStore(STORE_APP_STATE, { keyPath: "key" });
                     }
+                    if (!database.objectStoreNames.contains(FIRST_ROWTINE_TABLE)) {
+                        database.createObjectStore(FIRST_ROWTINE_TABLE, { keyPath: "key" });
+                    }
+                    if (!database.objectStoreNames.contains(SECOND_ROWTINE_TABLE)) {
+                        database.createObjectStore(SECOND_ROWTINE_TABLE, { keyPath: "key" });
+                    }
                 };
 
                 request.onsuccess = async (e) => {
@@ -477,6 +489,32 @@
 
                 request.onerror = (e) => reject(e.target.error);
             });
+        }
+
+        function getItemFromStore(storeName, key) {
+            return new Promise((resolve) => {
+                if (!db) return resolve(null);
+                const tx = db.transaction(storeName, "readonly");
+                const req = tx.objectStore(storeName).get(key);
+                req.onsuccess = () => resolve(req.result ? req.result : null);
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        function getAllItemsFromStore(storeName) {
+            return new Promise((resolve) => {
+                if (!db) return resolve([]);
+                const tx = db.transaction(storeName, "readonly");
+                const req = tx.objectStore(storeName).getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        function saveItemToStore(storeName, item) {
+            if (!db) return;
+            const tx = db.transaction(storeName, "readwrite");
+            tx.objectStore(storeName).put(item);
         }
 
         function getStateFromDB(key) {
@@ -506,22 +544,17 @@
         }
 
         async function setupWeeklyDefaultKeys() {
-            const today = new Date();
-            const sunday = getStartOfWeekSunday(today);
+            for (const item of FirstRowtineDefaults) {
+                const existing = await getItemFromStore(FIRST_ROWTINE_TABLE, item.key);
+                if (!existing) {
+                    saveItemToStore(FIRST_ROWTINE_TABLE, { ...item });
+                }
+            }
 
-            const defaults = [
-                { key: "PATIENT_ZERO_TRIM", value: sunday.toISOString() },
-                { key: "PATIENT_ZERO_TRIM_RESET", value: true },
-                { key: "PATIENT_ZERO_CIP_T", value: today.toISOString() },
-                { key: "PATIENT_ZERO_CIP_T_RESET", value: true },
-                { key: "PATIENT_ZERO_CIP_D", value: today.toISOString() },
-                { key: "PATIENT_ZERO_CIP_D_RESET", value: true }
-            ];
-
-            for (const item of defaults) {
-                const existing = await getStateFromDB(item.key);
-                if (existing === null || existing === undefined) {
-                    saveStateToDB(item.key, item.value);
+            for (const item of SecondRowtineDefaults) {
+                const existing = await getItemFromStore(SECOND_ROWTINE_TABLE, item.key);
+                if (!existing) {
+                    saveItemToStore(SECOND_ROWTINE_TABLE, { ...item });
                 }
             }
         }
@@ -547,12 +580,9 @@
 
             const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE], "readwrite");
 
-            // Save to STORE_SECTIONS
             tx.objectStore(STORE_SECTIONS).put(data);
-
-            // Save state indicators to STORE_APP_STATE
             tx.objectStore(STORE_APP_STATE).put({ key: "currentEditing", value: sectionIndex });
-            tx.objectStore(STORE_APP_STATE).put({ key: `section_${sectionIndex}_total`, value: data["section-total"] });
+            // tx.objectStore(STORE_APP_STATE).put({ key: `section_${sectionIndex}_total`, value: data["section-total"] });
         }
 
         function loadAllDataFromDB() {
@@ -616,8 +646,16 @@
             const { sections, appState } = await loadAllDataFromDB();
             sections.sort((a, b) => a.index - b.index);
 
+            const firstRowtine = await getAllItemsFromStore(FIRST_ROWTINE_TABLE);
+            const secondRowtine = await getAllItemsFromStore(SECOND_ROWTINE_TABLE);
+
+            firstRowtine.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+            secondRowtine.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+
             const combinedBackup = {
                 appState: appState,
+                firstRowtine: firstRowtine,
+                secondRowtine: secondRowtine,
                 sections: sections
             };
 
@@ -632,30 +670,45 @@
 
                 let sectionsData = [];
                 let appStateData = [];
+                let firstRowtineData = [];
+                let secondRowtineData = [];
 
                 if (Array.isArray(backupData)) {
-                    // Backward compatibility: If array, treat as sections only
                     sectionsData = backupData;
                 } else if (typeof backupData === "object" && backupData !== null) {
                     sectionsData = backupData.sections || [];
                     appStateData = backupData.appState || [];
+                    firstRowtineData = backupData.firstRowtine || [];
+                    secondRowtineData = backupData.secondRowtine || [];
                 }
 
-                const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE], "readwrite");
-                const sectionsStore = tx.objectStore(STORE_SECTIONS);
-                const stateStore = tx.objectStore(STORE_APP_STATE);
+                const tx = db.transaction([STORE_SECTIONS, STORE_APP_STATE, FIRST_ROWTINE_TABLE, SECOND_ROWTINE_TABLE], "readwrite");
 
+                const sectionsStore = tx.objectStore(STORE_SECTIONS);
                 sectionsStore.clear();
                 sectionsData.forEach(item => sectionsStore.put(item));
 
                 if (appStateData.length > 0) {
+                    const stateStore = tx.objectStore(STORE_APP_STATE);
                     stateStore.clear();
                     appStateData.forEach(item => stateStore.put(item));
                 }
 
-                tx.oncomplete = () => {
-                    renderWeeklyUI();
-                    renderUIFromDB();
+                if (firstRowtineData.length > 0) {
+                    const firstStore = tx.objectStore(FIRST_ROWTINE_TABLE);
+                    firstStore.clear();
+                    firstRowtineData.forEach(item => firstStore.put(item));
+                }
+
+                if (secondRowtineData.length > 0) {
+                    const secondStore = tx.objectStore(SECOND_ROWTINE_TABLE);
+                    secondStore.clear();
+                    secondRowtineData.forEach(item => secondStore.put(item));
+                }
+
+                tx.oncomplete = async () => {
+                    await renderWeeklyUI();
+                    await renderUIFromDB();
                 };
             } catch (err) {
                 console.error("Invalid JSON input for backup data", err);
@@ -666,65 +719,88 @@
         async function renderWeeklyUI() {
             const today = new Date();
             const dayOfWeek = today.getDay();
+            const weeklyRows = document.querySelectorAll("#weekly .weekly-row");
+            if (weeklyRows.length < 2) return;
 
-            const trackingCols = [
-                { key: "TRIM", warnDays: 26, dangerDays: 28 },
-                { key: "CIP_T", warnDays: 19, dangerDays: 20 },
-                { key: "CIP_D", warnDays: 9, dangerDays: 10 }
-            ];
+            weeklyRows[0].innerHTML = "";
+            weeklyRows[1].innerHTML = "";
 
-            for (const col of trackingCols) {
-                const elem = document.querySelector(`#col-${col.key}`);
-                if (!elem) continue;
+            // Fetch dynamic items directly from DB
+            const firstRowtineItems = await getAllItemsFromStore(FIRST_ROWTINE_TABLE);
+            firstRowtineItems.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 
-                let zeroDate = await getStateFromDB(`PATIENT_ZERO_${col.key}`);
-                let resetState = await getStateFromDB(`PATIENT_ZERO_${col.key}_RESET`);
+            // Row 1: Dynamically render all keys from FirstRowtineTable
+            for (const config of firstRowtineItems) {
+                const key = config.key;
+                const warnDays = config.warnDays ?? 999;
+                const dangerDays = config.dangerDays ?? 999;
+                let zeroDate = config.value || new Date().toISOString();
+                let isReset = config.isReset !== undefined ? config.isReset : true;
 
                 let diff = getDaysDiff(zeroDate);
+                let stateChanged = false;
 
-                if (diff >= col.dangerDays) {
+                if (diff >= dangerDays) {
                     zeroDate = new Date().toISOString();
-                    resetState = false;
-                    saveStateToDB(`PATIENT_ZERO_${col.key}`, zeroDate);
-                    saveStateToDB(`PATIENT_ZERO_${col.key}_RESET`, false);
+                    isReset = false;
+                    config.value = zeroDate;
+                    config.isReset = false;
+                    stateChanged = true;
                     diff = 0;
-                } else if (diff >= col.warnDays && resetState) {
-                    resetState = false;
-                    saveStateToDB(`PATIENT_ZERO_${col.key}_RESET`, false);
+                } else if (diff >= warnDays && isReset) {
+                    isReset = false;
+                    config.isReset = false;
+                    stateChanged = true;
                 }
 
-                elem.setAttribute("data-days", diff);
-                elem.classList.remove("state-success", "state-warning", "state-danger");
+                if (stateChanged) {
+                    saveItemToStore(FIRST_ROWTINE_TABLE, config);
+                }
 
-                if (diff < col.warnDays && resetState) {
-                    elem.classList.add("state-success");
-                } else if (diff >= col.dangerDays || !resetState) {
-                    if (diff >= col.warnDays && diff < col.dangerDays) {
-                        elem.classList.add("state-warning");
+                const col = document.createElement("div");
+                col.className = "weekly-col";
+                col.id = `col-${key}`;
+                col.setAttribute("data-key", key);
+                col.setAttribute("data-days", diff);
+
+                const labelKey = key.replace(/_/g, "-");
+                col.innerHTML = `${labelKey} <button class="weekly-btn-reset">RESET</button>`;
+
+                if (diff < warnDays && isReset) {
+                    col.classList.add("state-success");
+                } else if (diff >= dangerDays || !isReset) {
+                    if (diff >= warnDays && diff < dangerDays) {
+                        col.classList.add("state-warning");
                     } else {
-                        elem.classList.add("state-danger");
+                        col.classList.add("state-danger");
                     }
                 }
+
+                weeklyRows[0].appendChild(col);
             }
 
-            const bthElem = document.querySelector("#col-BTH");
-            if (bthElem) {
-                bthElem.classList.remove("state-success", "state-warning");
-                if (dayOfWeek === 2 || dayOfWeek === 6) {
-                    bthElem.classList.add("state-warning");
-                } else {
-                    bthElem.classList.add("state-success");
-                }
-            }
+            // Fetch dynamic items directly from DB
+            const secondRowtineItems = await getAllItemsFromStore(SECOND_ROWTINE_TABLE);
+            secondRowtineItems.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 
-            const exeElem = document.querySelector("#col-EXE");
-            if (exeElem) {
-                exeElem.classList.remove("state-success", "state-warning");
-                if (dayOfWeek === 4 || dayOfWeek === 0) {
-                    exeElem.classList.add("state-warning");
+            // Row 2: Dynamically render all keys from SecondRowtineTable
+            for (const config of secondRowtineItems) {
+                const key = config.key;
+                const warnDaysArr = config.warnDays || [];
+
+                const col = document.createElement("div");
+                col.className = "weekly-col";
+                col.id = `col-${key}`;
+                col.setAttribute("data-key", key);
+                col.textContent = key.replace(/_/g, "-");
+
+                if (warnDaysArr.includes(dayOfWeek)) {
+                    col.classList.add("state-warning");
                 } else {
-                    exeElem.classList.add("state-success");
+                    col.classList.add("state-success");
                 }
+
+                weeklyRows[1].appendChild(col);
             }
         }
 
@@ -893,9 +969,8 @@
                 `;
             }
 
-            // Save aggregate metrics into STORE_APP_STATE
-            saveStateToDB("grandTotal", grandTotal);
-            saveStateToDB("averageValue", avgValue);
+            // saveStateToDB("grandTotal", grandTotal);
+            // saveStateToDB("averageValue", avgValue);
             saveStateToDB("lastUpdated", new Date().toISOString());
         }
 
@@ -926,12 +1001,9 @@
             const col = e.target.closest(".weekly-col");
             if (!col) return;
 
-            const key = col.getAttribute("data-key");
-            if (["TRIM", "CIP_T", "CIP_D"].includes(key)) {
-                const resetBtn = col.querySelector(".weekly-btn-reset");
-                if (resetBtn) {
-                    resetBtn.classList.toggle("active");
-                }
+            const resetBtn = col.querySelector(".weekly-btn-reset");
+            if (resetBtn) {
+                resetBtn.classList.toggle("active");
             }
         });
 
@@ -941,7 +1013,13 @@
                 const col = resetBtn.closest(".weekly-col");
                 const key = col.getAttribute("data-key");
 
-                saveStateToDB(`PATIENT_ZERO_${key}_RESET`, true);
+                let itemConfig = await getItemFromStore(FIRST_ROWTINE_TABLE, key);
+                if (itemConfig) {
+                    itemConfig.value = new Date().toISOString();
+                    itemConfig.isReset = true;
+                    saveItemToStore(FIRST_ROWTINE_TABLE, itemConfig);
+                }
+
                 resetBtn.classList.remove("active");
                 await renderWeeklyUI();
             }
