@@ -158,13 +158,14 @@
         .weekly-col {
             flex: 1;
             position: relative;
-            padding: 0.5em;
-            font-size: 16px;
+            padding: 0.75em 0.25em;
+            font-size: 14px;
             font-weight: bold;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
+            -webkit-user-select: none;
             user-select: none;
             cursor: pointer;
             box-sizing: border-box;
@@ -174,8 +175,8 @@
             content: attr(data-days);
             position: absolute;
             bottom: 2px;
-            right: 6px;
-            font-size: 11px;
+            right: 4px;
+            font-size: 10px;
             font-weight: normal;
             opacity: 0.85;
         }
@@ -430,16 +431,16 @@
 
         // Default configurations
         const FirstRowtineDefaults = [
-            { index: 0, key: "A_TRI", warnDays: 26, dangerDays: 28, value: new Date().toISOString(), isReset: true },
+            /* { index: 0, key: "A_TRI", warnDays: 26, dangerDays: 28, value: new Date().toISOString(), isReset: true },
             { index: 1, key: "H_TRI", warnDays: 26, dangerDays: 28, value: new Date().toISOString(), isReset: true },
             { index: 2, key: "T_CU", warnDays: 26, dangerDays: 27, value: new Date().toISOString(), isReset: true },
-            { index: 3, key: "D_CU", warnDays: 8, dangerDays: 9, value: new Date().toISOString(), isReset: true }
+            { index: 3, key: "D_CU", warnDays: 8, dangerDays: 9, value: new Date().toISOString(), isReset: true } */
         ];
 
         const SecondRowtineDefaults = [
-            { index: 0, key: "EXE", warnDays: [0, 4] },
+            /* { index: 0, key: "EXE", warnDays: [0, 4] },
             { index: 1, key: "BUT", warnDays: [2, 6] },
-            { index: 2, key: "SHAKE", warnDays: [0, 2, 4] }
+            { index: 2, key: "SHAKE", warnDays: [0, 2, 4] } */
         ];
 
         // --- Date Helpers ---
