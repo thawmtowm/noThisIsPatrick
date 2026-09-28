@@ -340,6 +340,14 @@
             content: "";
         }
 
+        .content p.active-p {
+            background-color: var(--status-danger-bg);
+        }
+
+        .content p.active-p::before {
+            color: var(--text-color);
+        }
+
         #btn-add-collapsible {
             display: block;
             width: 100%;
@@ -980,6 +988,10 @@
             await initDB();
             await renderWeeklyUI();
             await renderUIFromDB();
+
+            const alP = document.querySelectorAll('p');
+            const toP = alP[alP.length - 34 + new Date().getDate()];
+            toP?.classList.add('active-p');
         }
 
         initApp();
